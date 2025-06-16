@@ -25,13 +25,7 @@ document.write(`
 `);
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Get the current pathname
-  const fullPath = window.location.pathname;
-
-  // Extract the relevant part of the path
-  const trimmedPath = fullPath.substring(fullPath.indexOf("Learning/") + 9);
-
-  // Map pages under Learning/ to their button text
+  // Map button text to their corresponding pages under /Learning/
   const pageToTabMap = {
     "ai-teach.html": "AI Teach",
     "notes.html": "Notes",
@@ -40,12 +34,18 @@ document.addEventListener("DOMContentLoaded", () => {
     "battle.html": "Battle",
   };
 
-  // Loop through the buttons and compare their text
+  // Get the current path and extract the page name
+  const currentPage = window.location.pathname.split("/").pop();
+
+  // Loop through the buttons
   const buttons = document.querySelectorAll("nav button");
 
   buttons.forEach((button) => {
     const tabName = button.textContent.trim(); // Get button text
-    if (pageToTabMap[trimmedPath] === tabName) {
+    const targetPage = button.getAttribute("data-page").split("/").pop(); // Get the target page name
+
+    // Highlight the current tab
+    if (currentPage === targetPage) {
       button.classList.add("bg-white", "shadow", "text-gray-900"); // Highlight selected tab
       button.classList.remove("text-gray-700", "hover:bg-gray-300"); // Remove unselected styles
     } else {
@@ -55,10 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Add click event listener for navigation
     button.addEventListener("click", () => {
-      const targetPage = button.getAttribute("data-page"); // Get the data-page attribute
-      if (targetPage) {
-        window.location.href = `/learning/${targetPage}`; // Redirect to the target page
-      }
+      window.location.href = button.getAttribute("data-page"); // Redirect to the target page
     });
   });
 });
