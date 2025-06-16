@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Physics Revision Notes</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+ <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            background-color: #ffffff;
+            color: #333;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        h1,
+        h2,
+        h3,
+        p {
+            margin: 0;
+            padding: 0;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        i {
+            font-size: inherit;
+        }
+
+        header {
+            cursor: pointer;
+padding: 0px 20px;
+height: 50px;
+display: flex;
+justify-content: space-between;
+align-items: center;
+position: sticky;
+top: 0;
+z-index: 1000;
+background-color: #ffffffd5;
+backdrop-filter: blur(20px);
+background-blend-mode: overlay;
+border-bottom: 1px solid #e2e2e2;
+}
+
+.logo {
+font-size: 24px;
+font-weight: bold;
+color: #000000;
+}
+
+nav {
+
+display: flex;
+gap: 20px;
+
+
+}
+
+nav a {
+text-decoration: none;
+color: #000000;
+font-size: 16px;
+padding: 0px 8px;
+border-radius: 6px;
+transition: all 0.3s ease;
+color: rgba(0, 0, 0, 0.397);
+font-weight: bold;
+}
+
+nav a.active,
+nav a:hover {
+/* background-color: #004cde;
+color: #fff; */
+color: black;
+
+
+}
+
+.account {
+margin-left: 80px;
+display: flex;
+align-items: center;
+gap: 10px;
+background-color: #fff;
+border: 1px solid #ddd;
+border-radius: 50px;
+padding: 5px;
+padding-right: 15px;
+/* box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.05); */
+}
+
+.account .circle {
+width: 25px;
+height: 25px;
+background: #004cde;
+border-radius: 50%;
+display: flex;
+justify-content: center;
+align-items: center;
+color: #fff;
+font-size: 14px;
+}
+
+        .container {
+            max-width: 100%;
+            display: flex;
+            gap: 20px;
+            height: calc(100% - 50px);
+        }
+
+        .sidebar {
+            width: 250px;
+            height: calc(100% - 18px);
+            background-color: #fff;
+            padding: 15px;
+            padding-top: 0px;
+            border-right: 2px solid #bdbdbd;
+            display: flex;
+            flex-direction: column;
+            overflow-y: scroll;
+        }
+
+        .sidebar h1 {
+            font-size: 1.8rem;
+        }
+
+        .sidebar .unit-container {
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+
+        .sidebar .unit-container h2 {
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .sidebar .unit-container ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar .unit-container li {
+            margin-bottom: 5px;
+            cursor: pointer;
+        }
+
+        #subject-button {
+            transition: all 0.3s;
+        }
+
+        #subject-button:hover {
+            box-Shadow: 0px 0px 0px 5px #FF8585;
+            filter: brightness(1.1);
+        }
+
+        .main-content {
+            flex: 1;
+            /* padding: 20px; */
+        }
+
+        .main-content h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .main-content .content-box {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+        }
+
+        .main-content .content-box h2 {
+            font-size: 1.5rem;
+            color: #333;
+        }
+
+        button {
+            cursor: pointer;
+            display: flex;
+            text-align: left;
+            font-size: 10px;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #ddd;
+            border-radius: 7px;
+            background-color: #f9f9f9;
+            padding: 10px 10px;
+            text-decoration: none;
+            color: #333;
+            width: 100%;
+            box-sizing: border-box;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        button.selected {
+            background-color: black;
+            color: white;
+        }
+
+
+        /* Responsiveness */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+  
+
+    <div class="container">
+        <div class="sidebar">
+            <div class="sub-container"
+                style="width: 100%; height: 0px; background-color: #ffffff; padding-top: 15px; padding-bottom: 0px;  position: sticky; top: 0px; margin-bottom: 100px;">
+                <div class="unit-container" id="subject-button"
+                    style="background-color: #FF8585; color: white; border: 2px solid black; gap: 5px; padding-left: 12px;   cursor: pointer;">
+                    <p href="#"
+                        style="display: block; font-size: 15px; font-weight: bold; color: #ffffffb7; margin-bottom: 0px;">
+                        <i class="fas fa-chevron-left"></i> Home</p>
+                    <h1 style="font-size: 35px; margin-top: 0px">Chemistry</h1>
+                </div>
+            </div>
+
+            <div class="unit-container" id="learningNotes">
+                <h2>Learning Notes</h2>
+                <button data-unit="1">Unit 1: Structure, Bonding and Introduction to Organic Chemistry</button>
+                <button data-unit="2">Unit 2: Energetics, Group Chemistry, Halogenoalkanes and Alcohols</button>
+                <button data-unit="3">Unit 3: Practical Skills in Chemistry I</button>
+                <button data-unit="4">Unit 4: Rates, Equilibria and Further Organic Chemistry</button>
+                <button data-unit="5">Unit 5: Transition Metals and Organic Nitrogen Chemistry</button>
+                <button data-unit="6">Unit 6: Practical Skills in Chemistry II</button>
+            </div>
+            <div class="unit-container" id="goldenNotes">
+                <h2>Golden Exam Notes</h2>
+                <button data-unit="1">Unit 1: Structure, Bonding and Introduction to Organic Chemistry</button>
+                <button data-unit="2">Unit 2: Energetics, Group Chemistry, Halogenoalkanes and Alcohols</button>
+                <button data-unit="3">Unit 3: Practical Skills in Chemistry I</button>
+                <button data-unit="4">Unit 4: Rates, Equilibria and Further Organic Chemistry</button>
+                <button data-unit="5">Unit 5: Transition Metals and Organic Nitrogen Chemistry</button>
+                <button data-unit="6">Unit 6: Practical Skills in Chemistry II</button>
+            </div>
+        </div>
+        <div class="main-content">
+            <!-- <h1>International A Level</h1>
+        <h1>Physics Revision Notes</h1> -->
+            <iframe id="content-iframe" src="" width="100%"
+                style="height: 100%; border-radius: 0px; border: none; overflow-y: hidden;"></iframe>
+        </div>
+    </div>
+
+    <script>
+        const buttons = document.querySelectorAll('.unit-container button');
+        const iframe = document.getElementById('content-iframe');
+
+        const link = [
+            "https://docs.google.com/document/d/e/2PACX-1vQL_cGN3xLr35FCJ_ws0fY4EbI24vlLnWHGqm9tfr8ZA5JRa4VL1cEaiqHcluG6ADy11xAIRw5RNvbi/pub?embedded=true",
+            "https://docs.google.com/document/d/e/2PACX-1vQxWomaTWmVW-1qdQDviCXp_djSDamiDz3M3xToOQp6jK0YuZIcFxJjb4NDA36OeZly8i95s3t0swe0/pub?embedded=true",
+            "https://docs.google.com/document/d/e/2PACX-1vQsWLXEDS0etoWFvMfrhI1i994X36iL2ul6HZQoeTFpj6rfADF4xT4hWZgXETugr2c2TnjFffR1Umkv/pub?embedded=true",
+            "https://docs.google.com/document/d/e/2PACX-1vSfplXRYjgfCnOLE0cNAiCg1T8sfccRb9D9yRVvNiX_Rvq8c7_1CQ97UtrhBIMxxYODfm5CQ-tH0Q50/pub?embedded=true",
+            "https://docs.google.com/document/d/e/2PACX-1vQ8VRJfRIjbflm69Qa5rlKqOtAAPflyIrj_t24NCpyg-_coUQs5vtR3lbJl79mbeoTIZjWqFgmaZMvG/pub?embedded=true",
+            "https://docs.google.com/document/d/e/2PACX-1vSWE4jgNxKYiSEZHdYigFiHm-x3vUHKqVQ7UTFBST6I_hC-KkGkod9b3VuhH4YmbtRTcG669pP0EkcQ/pub?embedded=true"
+
+
+        ];
+
+        buttons.forEach(button => {
+            button.addEventListener('click', () => {
+                //Deselect previously selected button
+                const previouslySelected = document.querySelector('button.selected');
+                if (previouslySelected) {
+                    previouslySelected.classList.remove('selected');
+                }
+                button.classList.add('selected');
+                const unitNumber = button.dataset.unit;
+                const fileName = `Unit${unitNumber}.md`;
+
+                try {
+                    //Directly load the markdown file into the iframe's src attribute
+                    iframe.src = `${link[unitNumber - 1]}`;
+                } catch (error) {
+                    console.error("Error loading file:", error);
+                    alert(`Error: Could not load ${fileName}. Please ensure the file exists in the same directory.`);
+                }
+            });
+        });
+
+        document.getElementById('subject-button').addEventListener('click', function () {
+            window.location.href = 'index.html';
+        });
+        window.addEventListener('load', () => {
+            buttons[0].click();
+        });
+    </script>
+    <script src="header.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+ <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+    <title>AIToLearn</title>
+    <style>
+        /* Global Styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            background-color: white;
+            color: #333;
+
+            --progressnet: 0;
+            overflow: scroll;
+        }
+
+        body::-webkit-scrollbar {
+            display: none;
+        }
+
+        h1,
+        h2,
+        h3,
+        p {
+            margin: 0;
+            padding: 0;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        /* header {
+            cursor: pointer;
+            box-sizing: border-box;
+            padding: 0px 20px;
+            height: 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background-color: #ffffffd5;
+           
+            backdrop-filter: blur(20px);
+            background-blend-mode: overlay;
+            border-bottom: 1px solid #e2e2e2;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #000000;
+        }
+
+        nav {
+
+            display: flex;
+            gap: 20px;
+
+
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #000000;
+            font-size: 16px;
+            padding: 0px 8px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            color: rgba(0, 0, 0, 0.397);
+            font-weight: bold;
+        }
+
+        nav a.active,
+        nav a:hover {
+  
+            color: black;
+
+
+        }
+
+        .account {
+            margin-left: 80px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 50px;
+            padding: 5px;
+            padding-right: 15px;
+           
+        }
+
+        .account .circle {
+            width: 25px;
+            height: 25px;
+            background: #004cde;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            font-size: 14px;
+        } */
+
+
+        /* Container */
+        .container {
+            max-width: 700px;
+            margin: 20px auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Title Section */
+        .title-section {
+            margin-bottom: 20px;
+
+        }
+
+        .title-section h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .title-section p {
+            color: #555;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        /* Tab Navigation */
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .tabs button {
+            align-items: center;
+            justify-content: center;
+            padding: 7px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fff;
+            font-weight: bold;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .tabs button:hover {
+            background-color: #f1f1f1;
+        }
+
+        .tabs button.active {
+            background-color: #000;
+            color: #fff;
+        }
+
+        /* Subject Container */
+        .subject-container {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            margin-bottom: 20px;
+            width: 420px;
+            gap: 10px;
+        }
+
+        .subject-sub-container {
+            display: flex;
+            width: 100%;
+            gap: 10px;
+        }
+
+        /* Left Section */
+        .subject-left {
+            cursor: pointer;
+            background-color: #0FBD8C;
+            border: 2px solid black;
+            color: #fff;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border-radius: 10px;
+            padding: 10px;
+            transition: all 0.3s;
+        }
+
+
+        .subject-left span {
+            font-size: 100px;
+            font-weight: bold;
+
+        }
+
+        /* Right Section */
+        .subject-right {
+            flex: 1.3;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .subject-button {
+            height: 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            /* border: 1px solid #ddd; */
+            border-radius: 10px;
+            padding: 0px 10px;
+            background-color: #f9f9f9;
+            text-decoration: none;
+            color: #333;
+            font-weight: 100;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .subject-button div {
+            padding: 0px;
+            margin: 0px;
+            justify-content: center;
+        }
+
+        .subject-button span {
+            font-size: 10px;
+            font-weight: 100;
+            /* color: #888; */
+            margin: 0px;
+            padding: 0px;
+        }
+
+        .subject-button h {
+            margin-bottom: 10px;
+        }
+
+        .subject-button:hover {
+            /* background-color: #f1f1f1; */
+            /* background-color: #000;
+            color: white; */
+            outline: 2px solid black;
+        }
+
+
+
+        #phy-subject {
+            background-color: #4081FF;
+        }
+
+        #chem-subject {
+            background-color: #FF8585;
+        }
+
+        .utilities {
+            margin: auto;
+            cursor: pointer;
+            border-radius: 10px;
+            height: 80px;
+            width: 80px;
+            background-color: #00000000;
+            display: flexbox;
+            align-items: center;
+            justify-content: start;
+            align-content: start;
+            text-align: center;
+            justify-items: center;
+            font-size: 12px;
+            flex-shrink: 0;
+
+            font-weight: bold;
+
+
+        }
+
+        .subject-container .container::-webkit-scrollbar {
+            display: none;
+        }
+
+
+
+
+        .utilities .circle {
+            border: 2px solid black;
+            margin: auto;
+            align-items: center;
+            justify-content: center;
+            align-content: center;
+            text-align: center;
+            align-self: center;
+            border-radius: 100px;
+            height: 40px;
+            width: 40px;
+            background-color: #0fbd8c;
+            font-size: 15px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: white;
+
+        }
+
+        .timeline-container {
+            width: 450px;
+            height: 150px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            display: flex;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .left-section {
+            width: 30%;
+            padding: 0px;
+            padding-right: 10px;
+            border-right: 1px solid #ddd;
+            position: relative;
+            justify-content: space-between;
+        }
+
+
+        .left-section .days {
+            font-size: 30px;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #000;
+        }
+
+        .left-section .start-btn {
+            display: inline-block;
+            padding: 10px 15px;
+            background: #00c48c;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .right-section {
+            width: 70%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .right-section-header {
+            display: flex;
+            justify-content: space-between;
+            padding-right: 15px;
+            font-size: 14px;
+        }
+
+        .right-section-header a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .events-container {
+            display: flex;
+            overflow-x: auto;
+            padding: 10px 10px 0px;
+            /* Extra padding at the bottom for the progress bar */
+            white-space: nowrap;
+            position: relative;
+            background-color: #ffffff;
+        }
+
+        .events-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .event {
+            z-index: 10;
+            width: 100px;
+            flex: 0 0 auto;
+            text-align: center;
+            margin-right: 20px;
+            position: relative;
+        }
+
+        .event-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #00c48c;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+            font-weight: bold;
+            border: 2px solid black;
+            margin: 0 auto 10px auto;
+        }
+
+        .event-label {
+            text-wrap: wrap;
+            font-size: 12px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .progress-bar {
+            top: 32px;
+            left: 0px;
+            width: 100%;
+            z-index: 1;
+            /* width: calc(100% - 20px); */
+            /* Adjust for container padding */
+            height: 10px;
+            background: #ddd;
+            position: absolute;
+            bottom: 10px;
+            /* Align with the bottom padding of the container */
+            /* left: 10px; */
+            /* Align with container padding */
+        }
+
+        .progress {
+            z-index: 5;
+            width: 50px;
+            /* Example progress value */
+            height: 100%;
+            background: #00c48c;
+            transition: width 0.3s ease;
+        }
+
+        .timer {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background-color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            align-self: center;
+            margin: 0 auto;
+            font-size: 30px;
+            font-weight: bold;
+            color: black;
+
+            /* border: 15px solid var(--primary-color); */
+
+            /* background-image: conic-gradient(var(--primary-color) 15%, var(--box-color) 15.1%); */
+
+            background: linear-gradient(#ffffff, #ffffff) padding-box,
+                conic-gradient(#0FBD8C 0%, #0FBD8C 15%, #0000001e 15.1%) border-box;
+            border-radius: 10em;
+            border: 15px solid transparent;
+            transition: background-color 1s ease;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header Section -->
+   
+
+    <!-- Main Content -->
+    <div class="container"
+        style="display: flex; width: 100%; flex-direction: row; justify-content: center; align-items: start;">
+        <div class="container" style="margin-right: 50px;">
+            <!-- Title Section -->
+            <div class="title-section" style="display: flex; align-self: start;">
+                <div class="sub-container" style="display: block; align-items: start;">
+                    <h1 style="font-size: 40px; text-align: left;">Updated Revision</h1>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs selectsubject" style="justify-content: space-between; width: 100%; align-items: center;">
+                <button class="active" data-tab="ial">Edexcel IAL</button>
+                +
+                <button data-tab="ielts">IELTS Training</button>
+                +
+                <!-- <button data-tab="ucat">UCAT Notes</button>
+                + -->
+                <button data-tab="interview">Interview Prep</button>
+            </div>
+
+            <!-- Subject Container (dynamically populated) -->
+            <div id="subject-list">
+            </div>
+
+        </div>
+        <div class="container" style="width: 500px; padding: 0px;">
+            <!-- Title Section -->
+
+
+            <div class="subject-container"
+                style="display: flex; width: 430px; flex-direction: row; padding-right: 0px; gap: 0px; margin-bottom: 0px;">
+                <div class="left-section">
+                    <h3 style="font-weight: 100;">Timeline</h3>
+                    <!-- <p>Scroll Position: <span id="scroll-position">0</span></p> -->
+                    <div class="days" id="days">42 Days</div>
+                    <a href="#" class="subject-left"
+                        style="width: fit-content; font-size: 13px; font-weight: bold;">START NOW</a>
+                </div>
+                <div class="right-section">
+                    <div class="right-section-header">
+                        <span></span>
+                        <a href="#">View All</a>
+                    </div>
+                    <div class="events-container" id="events-container">
+                        
+                        <div class="progress-bar" id="progress-bar">
+                            <div class="progress" id="progress"></div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="container" style="flex-direction: row; padding: 0px; width: 100%;  gap: 20px">
+                <div class="subject-container" style="width: 185px; margin-bottom: 0px;">
+                    Exam Tool
+                    <div class="subject-right">
+
+                        <a href="#" class="subject-button" style="height: 40px;" onclick="window.location.href = 'exam.html';">
+                            <div >
+                                <!-- <span>2008-2023</span> -->
+                                <div >
+                                    <i class="fas fa-clock" style="margin-right: 5px;"></i>
+                                    New 15 min
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right" style="margin-right: 0px;"></i>
+                        </a>
+                        <a href="#" class="subject-button" style="height: 40px;">
+                            <div>
+                                <!-- <span>2008-2023</span> -->
+                                <div>
+                                    <i class="fas fa-trophy" style="margin-right: 5px;"></i>
+                                    Leaderboard
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right" style="margin-right: 0px;"></i>
+                        </a>
+                        <a href="#" class="subject-button" style="height: 40px;">
+                            <div>
+                                <!-- <span>2008-2023</span> -->
+                                <div>
+                                    <i class="fas fa-list-alt" style="margin-right: 5px;"></i>
+                                    History
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right" style="margin-right: 0px;"></i>
+                        </a>
+                    </div>
+
+                </div>
+                <div class="subject-container"
+                    style="width: 185px; height: 170px;margin-bottom: 0px; align-items: center; justify-content: center">
+
+
+                    <div class="timer" id="timerDisplay" style="margin-bottom: 5px;">1:30</div>
+                    <!-- <div class="container" style="display: flex; flex-direction: row; gap: 10px; margin: 0px; padding: 0px; align-items: center; justify-content: center;">
+                    <a href="#" class="subject-left" style="justify-content: center; align-items: center; display: flex; flex-grow: 0; flex-direction: row; text-align: center; width: fit-content; font-size: 15px; font-weight: bold; margin: 0px; width: 80px;">Continue <i class="fas fa-chevron-right" style="margin-left: 5px;"></i> </a>
+                   </div> -->
+                    <div class="tabs" style="margin: 0px; width: auto;">
+                        <button class="active"
+                            style="width: 70px; height: 30px; padding: 0px 0px; display: flex; flex-direction: row;  text-align: center;        padding: 0px 0px;">Start</button>
+                        <button
+                            style="width: 90px;  height: 30px;padding: 0px 0px; display: flex; flex-direction: row; font-weight: 100;  text-align: center;  padding:0px 0px;">
+                            My Timers
+                        </button>
+
+                    </div>
+                </div>
+            </div>
+            <div class="subject-container">
+                My Performance
+                <div class="subject-container" style="width: 385px;"></div>
+            </div>
+
+        </div>
+    </div>
+    <script src="timeline.js"></script>
+    <script>
+        const tabs = document.querySelectorAll('.selectsubject button');
+        const subjectList = document.getElementById('subject-list');
+
+        const subjects = {
+            ial: [
+                { curriculum: `Edexcel IAL`, title: 'Biology', color: '#0FBD8C', link: 'edexcel-ial/biology/Bionotes.html' },
+                { curriculum: `Edexcel IAL`, title: 'Physics', color: '#4081FF', link: 'Phynotes.html' },
+                { curriculum: `Edexcel IAL`, title: 'Chemistry', color: '#FF8585', link: 'Chemnotes.html' }
+            ],
+            ielts: [
+                { curriculum: 'IELTS', title: 'Speaking', color: '#e31836', link: '#' },
+                { curriculum: 'IELTS', title: 'Reading', color: '#005cb9', link: '#' },
+                { curriculum: 'IELTS', title: 'Listening', color: '#491e85', link: '#' },
+                { curriculum: 'IELTS', title: 'Writing', color: '#00953a', link: '#' }
+            ],
+            ucat: [
+                { curriculum: `UCAT`, title: 'Situational Judgement', color: '#800080', link: '#' },
+                { curriculum: `UCAT`, title: 'Abstract Reasoning', color: '#008000', link: '#' },
+                // Add more UCAT subjects as needed
+            ],
+
+            interview: [
+                { curriculum: `Interview`, title: 'HK Uni Medicine', color: '#01d7bf', link: '#' },
+                { curriculum: `Interview`, title: 'UK Uni Medicine', color: 'blue', link: '#' },
+                // Add more UCAT subjects as needed
+            ]
+        };
+
+        function displaySubjects(tab) {
+            subjectList.innerHTML = '';
+            subjects[tab].forEach(subject => {
+                const subjectContainer = document.createElement('div');
+                subjectContainer.classList.add('subject-container');
+                subjectContainer.innerHTML = `
+             
+                    <div class="subject-sub-container">
+                        <div class="subject-left" style="background-color: ${subject.color};" onclick="window.location.href = '${subject.link}';">
+                   <p style="display: block; font-size: 15px; font-weight: bold; color: #ffffffb7; margin-bottom: 2px;">
+                        </i>${subject.curriculum}</p>
+                    <h2 style="font-size: 30px; margin-bottom: 5px">${subject.title}</h2>
+                    <p style="font-weight: bold">Golden Notes <i style="font-size: 12px; margin-left: 2px; color: #ffffff80" class="fas fa-chevron-right"></i></p>
+                            <h class="subject-link">
+                                
+                            </h>
+                        </div>
+                        <div class="subject-right">
+                            <a href="#" class="subject-button">
+                                <i class="fas fa-paper-plane"></i>
+                                <div>
+                                    <span>${subject.curriculum} ${subject.title} </span>
+                                    <div style="font-weight: bold">Past Papers</div>
+                                </div>
+                                <i class="fas fa-chevron-right" style="margin-right: 0px;"></i>
+                            </a>
+                            <a href="#" class="subject-button">
+                                 <i class="fas fa-pencil-square"></i>
+                                <div>
+                                        <span>${subject.curriculum} ${subject.title} </span>
+                                    <div style="font-weight: bold">Exam Tool</div>
+                                </div>
+                                <i class="fas fa-chevron-right" style="margin-right: 0px;"></i>
+                            </a>
+                        </div>
+                    </div>
+                `;
+                subjectList.appendChild(subjectContainer);
+            });
+
+            // Add event listeners for hover effect and links
+            const subjectLefts = document.querySelectorAll('.subject-left');
+            subjectLefts.forEach(subjectLeft => {
+                subjectLeft.addEventListener('mouseover', () => {
+                    const backgroundColor = window.getComputedStyle(subjectLeft).backgroundColor;
+                    subjectLeft.style.boxShadow = `0px 0px 0px 5px ${backgroundColor}`;
+                    subjectLeft.style.filter = 'brightness(1.1)';
+                });
+                subjectLeft.addEventListener('mouseout', () => {
+                    subjectLeft.style.boxShadow = 'none';
+                    subjectLeft.style.filter = 'brightness(1)';
+                });
+            });
+        }
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                displaySubjects(tab.dataset.tab);
+            });
+        });
+
+        //Initial Display
+        displaySubjects('ial');
+
+
+    </script>
+    <script src="header.js"></script>
+    <script>
+        //     const eventsContainer = document.getElementById('events-container');
+        // const scrollPositionDisplay = document.getElementById('progress');
+
+        // // Add an event listener to track the scroll position
+        // eventsContainer.addEventListener('scroll', () => {
+        //   // Get the horizontal scroll position
+        //   const scrollPosition = eventsContainer.scrollLeft;
+        //   // Display the scroll position
+        //   scrollPositionDisplay.style.width = `${200 - scrollPosition}px`;
+        //   console.log(scrollPositionDisplay.width);
+        // });
+    </script>
+
+</body>
+
+</html>

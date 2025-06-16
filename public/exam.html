@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Exam Tool</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+ <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <style>
+        body {
+            box-sizing: border-box;
+            border: none;
+            font-family: Arial, sans-serif;
+            margin: 0px;
+            padding: 0px;
+            box-sizing: border-box;
+            background-color: #ffffff;
+            color: #333;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            width: 100vw;
+            flex-direction: column;
+            flex-shrink: 0;
+            justify-content: start;
+            align-content: start;
+            /* Center the container vertically */
+            /* align-items: center; */
+            /* Center the container horizontally */
+
+
+        }
+
+        h1,
+        h2,
+        h3,
+        p {
+            margin: 0;
+            padding: 0;
+        }
+
+        h2 {
+            font-size: 20px;
+        }
+
+        h3 {
+            font-size: 13px;
+        }
+
+        p {
+            font-size: 13px;
+        }
+
+        header {
+            margin: 0px;
+            cursor: pointer;
+
+            padding: 0px 20px;
+            width: 100%;
+            box-sizing: border-box;
+            height: 50px;
+            display: flex;
+            flex-grow: 0;
+            flex-shrink: 0;
+            justify-content: space-between;
+            align-items: center;
+            /* position: sticky; */
+            top: 0;
+            z-index: 1000;
+            background-color: #ffffffd5;
+            backdrop-filter: blur(20px);
+            background-blend-mode: overlay;
+            border: 1px solid #e2e2e2;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #000000;
+        }
+
+        nav {
+
+            display: flex;
+            gap: 20px;
+
+
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #000000;
+            font-size: 16px;
+            padding: 0px 8px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            color: rgba(0, 0, 0, 0.397);
+            font-weight: bold;
+        }
+
+        nav a.active,
+        nav a:hover {
+            /* background-color: #004cde;
+color: #fff; */
+            color: black;
+
+
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        .account {
+            margin-left: 80px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 50px;
+            padding: 5px;
+            padding-right: 15px;
+            /* box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.05); */
+        }
+
+        .account .circle {
+            width: 25px;
+            height: 25px;
+            background: #004cde;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .container {
+            width: 100%;
+            display: flex;
+            /* gap: 20px; */
+            height: calc(100% - 100px);
+        }
+
+        .sidebar {
+            width: 250px;
+            /* height: 50%; */
+            flex-direction: column;
+            flex-grow: 0 1;
+            /* background-color: #fff; */
+            padding: 15px 15px 0px 15px;
+            border-right: 2px solid #ddd;
+            display: flex;
+            flex-direction: column;
+
+        }
+
+        .sidebar h2 {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .tabs button {
+            width: 100%;
+            align-items: center;
+            justify-content: center;
+            padding: 7px 0px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .tabs button:hover {
+            background-color: #f1f1f1;
+        }
+
+        .tabs button.active {
+            background-color: #000;
+            color: #fff;
+        }
+
+        button.selected {
+            background-color: black;
+            color: white;
+        }
+
+
+        .dropdown,
+        .duration,
+        .question-type {
+            margin-bottom: 20px;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px 10px;
+            /* font-size: 1rem; */
+            border: 1px solid #ddd;
+            border-radius: 5px;
+
+        }
+
+
+
+        .duration button {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+
+        .duration button.selected {
+            background-color: black;
+            color: white;
+        }
+
+        #start-button {
+            justify-self: flex-end;
+            height: 40px;
+            width: 100%;
+            background-color: #000000;
+            border: 2px solid black;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 10px;
+            padding: 10px;
+            transition: all 0.3s;
+        }
+
+        /* 
+        #start-button:hover {
+            background-color: #0da974;
+        } */
+
+        .main-content {
+            /* margin-right: 20px; */
+            /* height: calc(100%-10px); */
+            flex: 1;
+            padding: 15px 15px 0px 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        .main-content::-webkit-scrollbar {
+            display: none;
+        }
+
+
+
+
+        #main-content-2 {
+            /* margin-right: 20px; */
+            flex: 1;
+            padding: 0px 0px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #f1f1f1;
+            overflow: visible;
+            border-radius: 0px 10px 10px 0px;
+
+        }
+
+        #question-container {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .question-box {
+            width: 100%;
+            height: 100%;
+            overflow-y: scroll;
+            /* padding: 20px; */
+            /* border: 1px solid #ddd; */
+            border-radius: 5px;
+            background-color: #fff;
+            display: flex;
+            flex-grow: 1;
+            flex-direction: column;
+
+
+            /* justify-content: space-between; */
+        }
+
+        /* .main-content .question-box h2 {
+            font-size: 40px;
+            margin-bottom: 10px;
+        } */
+        .question-box::-webkit-scrollbar {
+            display: none;
+        }
+
+        .question-box textarea {
+
+            /* justify-self: flex-end; */
+            font-family: inherit;
+            /* width: 3560px; */
+            width: 365px;
+            flex-grow: 0;
+            /* height: 50%;
+            flex-direction: column;
+            flex-grow: 1; */
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            flex-shrink: 0;
+            height: 200px;
+            /* margin-top: 20px; */
+            font-size: 13px;
+            /* padding: 10px; */
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            resize: none;
+            overflow: scroll;
+            padding: 10px;
+            /* background-color: #f9f9f9; */
+            background-color: white;
+            outline: none;
+            transform: all 0.3s;
+
+
+        }
+
+
+        .main-content .question-box textarea::-webkit-scrollbar {
+            display: none;
+        }
+
+        .question-list {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            /* Three equal-width columns */
+            grid-gap: 10px;
+        }
+
+        .question-list button {
+            /* margin-bottom: 10px; */
+            text-align: left;
+            cursor: pointer;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 35px;
+            height: 35px;
+            font-weight: bold;
+            font-size: 15px;
+            text-align: center;
+            transition: all 0.3s;
+            padding: 0px;
+        }
+
+        .question-list button.selected {
+            background-color: black;
+            color: white;
+        }
+
+
+        .question-list button.correct {
+            border: 1px solid #ffffff00;
+            background-color: #b8e5ce;
+            color: black;
+        }
+
+        .question-list button.incorrect {
+            border: 1px solid #ffffff00;
+            background-color: #f9dfe0;
+            color: black;
+        }
+
+        .results-container {
+            display: flex;
+            flex-direction: column;
+            margin: 0px;
+            width: 100%;
+            gap: 20px;
+            justify-content: start;
+        }
+
+        .results-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .result-item {
+            /* border: 1px solid #ddd; */
+            /* border-top: 1px solid black;
+            border-bottom: 1px solid black; */
+            box-shadow: 0px 10px 10px 0px #00000011;
+            /* margin: 10px; */
+            padding: 15px;
+            /* border-radius: 5px; */
+            margin-bottom: 30px;
+            gap: 10px;
+            height: auto;
+            line-height: 1.5;
+            width: 100%;
+            background-color: white;
+            box-sizing: border-box;
+        }
+
+        .quote {
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            margin: 10px 0px;
+            transition: all 0.3s;
+            font-size: 13px;
+            /* border: 1px solid #ddd; */
+        }
+
+        .quote:hover {
+            /* background-color: #f1f1f1; */
+            /* border: 1px solid #ddd; */
+        }
+
+        .result-item p {
+
+            /* margin-bottom: 100px; */
+            text-wrap: wrap;
+        }
+
+
+        .end-button {
+            justify-self: flex-end;
+            height: 40px;
+            width: 100%;
+            background-color: #000000;
+            border: 2px solid black;
+            color: #fff;
+            font-weight: bold;
+
+            border-radius: 10px;
+            padding: 10px;
+            transition: all 0.3s;
+        }
+
+        .pane-button {
+            justify-self: flex-end;
+            height: 40px;
+            width: 50%;
+            background-color: #0FBD8C;
+            border: 2px solid black;
+            color: #fff;
+            /* font-weight: bold; */
+
+            border-radius: 10px;
+            /* padding: 10px; */
+            transition: all 0.3s;
+
+
+            /* padding: 7px 0px; */
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fff;
+            color: black;
+            /* font-weight: bold; */
+            cursor: pointer;
+            font-size: 15px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* #next-button:hover {
+            background-color: #0FBD8C;
+        } */
+
+
+        .unit-container {
+            /* background-color: #fff; */
+            padding: 10px;
+            border-radius: 5px;
+            /* background-color: #fff; */
+            border: 1px solid #ddd;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+
+        .unit-container h2 {
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        #left-info {
+            overflow-y: scroll;
+            display: block;
+            width: 100%;
+            height: 10px;
+            flex-grow: 1;
+
+        }
+
+        #left-info::-webkit-scrollbar {
+            display: none;
+        }
+
+        #unit-select {
+            background-color: #0FBD8C;
+            border: 2px solid black;
+            color: white;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 30px;
+        }
+
+        #unit-select optgroup {
+            font-size: 15px;
+            background-color: white;
+            color: #000;
+            font-weight: bold;
+        }
+
+
+        /* Responsiveness */
+        /* @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+            }
+        } */
+    </style>
+</head>
+
+<body>
+   
+    <!-- <div style="width: 100%; flex-direction: column; flex-grow: 1; justify-content: center; align-items: center; align-content: center;"> -->
+    <div class="container"
+        style="align-self: center; margin: 20px; width: 700px; border: 2px solid black; border-radius: 10px;">
+        <!-- Sidebar for controls -->
+        <div class="sidebar" id="controls">
+            <h2 style="text-align: center;width: 100%; flex-shrink: 0; flex-grow: 0;">Exam Tool</h2>
+
+            <div class="container" id="left-info">
+                <!-- <div class="dropdown">
+
+                    <div class="unit-container"
+                        style="display: flex; flex-direction: column; background-color: #4081FF; color: white; border: 2px solid black; gap: 5px; padding-left: 12px;   cursor: pointer;">
+                        <p href="#"
+                            style="display: block; font-size: 15px; font-weight: bold; color: #ffffffb7; margin-bottom: 0px;">
+                            Click to change
+                        </p>
+                        <h1 style="font-size: 35px; margin-top: 0px">Physics</h1>
+                    </div>
+
+                </div> -->
+                <div class="dropdown">
+                    <select id="unit-select">
+                        <optgroup label="IAL">
+                            <option>Biology</option>
+                            <option>Physics</option>
+                            <option>Chemistry</option>
+                        </optgroup>
+                        <optgroup label="IELTS">
+                            <option>Speaking</option>
+                            <option>Listening</option>
+                            <option>Reading</option>
+                            <option>Writing</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <h2>Select Topic</h2>
+                <div class="dropdown">
+                    <select id="topic-select">
+
+                    </select>
+                </div>
+                <h2>Exam Duration</h2>
+                <div class="tabs">
+                    <button class="tab-button active" data-duration="3">3 Min</button>
+                    <button class="tab-button" data-duration="5">5 Min</button>
+                    <button class="tab-button" data-duration="10">10 Min</button>
+                </div>
+                <h2>Grading</h2>
+                <div class="dropdown">
+                    <select id="grading-select">
+                        <option value="Self">Unranked - Self Answer Checking</option>
+                        <option value="AI">Ranked - AI Answer Checking</option>
+
+
+                    </select>
+                </div>
+
+
+            </div>
+
+            <div class="container" id="left-action"
+                style="height: 70px; width: 100%; justify-content: center; align-items: center; border-top: 1px solid #bdbdbd;">
+                <button id="start-button">START</button>
+            </div>
+
+        </div>
+
+        <!-- Main content area -->
+        <div class="main-content" id="main-content-0"
+            style="overflow-y: scroll; padding-top: 15px; justify-content: start; line-height: 1.5;">
+            <h2>How the Exam Tool Works</h2>
+            <div style="margin: 20px; text-align: left;">
+                <p>The Exam Tool allows you to practice exam-style questions for a variety of subjects and topics.
+                    Here's how it works:</p>
+                <ol style="font-size: 13px; gap: 10px;">
+                    <li>Select the subject and topic you want to practice from the options in the sidebar.</li>
+                    <li>Choose the exam duration (3, 5, or 10 minutes) and the question type (short answers or long
+                        answers).</li>
+                    <li>Click the "START" button to begin the exam.</li>
+                    <li>You will see a series of questions, and you can type your answers in the text area provided.
+                    </li>
+                    <li>Use the "Previous" and "Next" buttons to navigate between questions.</li>
+                    <li>When the time is up or you have answered all the questions, the results will be displayed,
+                        showing your performance and the model answers.</li>
+                </ol>
+                <p>The exam tool is designed to help you practice and improve your knowledge and exam-taking skills.
+                    Good luck with your studies!</p>
+            </div>
+
+        </div>
+        <div class="main-content" id="main-content-1" style="display: none;">
+            <!-- <div class="question-box" id="question-box-1">
+
+            </div> -->
+            <div class="container" id="left-action-1"
+                style="flex-shrink: 0; gap: 10px; height: 70px; width: 100%; justify-content: center; align-items: center; border-top: 1px solid #ddd;">
+                <button class="pane-button" id="previous-button"> <i class="fas fa-chevron-left"
+                        style="margin-right: 5px"></i>Previous</button>
+                <button class="pane-button" id="timer"
+                    style="font-weight: bold; border: 2px solid black; font-size: 20px">1:30</button>
+                <button class="pane-button" id="next-button">Next<i class="fas fa-chevron-right"
+                        style="margin-left: 5px"></i></button>
+
+            </div>
+        </div>
+        <div class="main-content" id="main-content-2" style="display: none; justify-content: start; overflow-y: hidden">
+            <div class="results-container" id="results-container"
+                style="display: block; justify-content: start; overflow-y: scroll;">
+            </div>
+        </div>
+    </div>
+    <!-- </div> -->
+
+
+    <script>
+
+        const tabs = document.querySelectorAll('.tab-button');
+        let selectedduration = 180;
+        let selectednumberofquestions = 3;
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                selectedduration = tab.getAttribute('data-duration') * 60;
+                selectednumberofquestions = tab.getAttribute('data-duration');
+            });
+        });
+
+        const unitSelect = document.getElementById("unit-select");
+        const topicSelect = document.getElementById("topic-select");
+        const gradingSelect = document.getElementById("grading-select");
+        const topics = {
+            "IAL": {
+                "Biology": [
+                    { unit: "Unit 1", topics: ["1A Carbohydrates, Lipids and Proteins", "1B Transport and circulatory systems", "1C Atherosclerosis and Cardiovascular Disease", "2A Membranes and Transport", "2B Proteins and DNA", "2C Genetic Code, Cystic Fibrosis and Genetic Screening"] },
+                    { unit: "Unit 2", topics: ["3A Cell Structure, Eukaryotes and Prokaryotes", "3B Mitosis, Meiosis and Reproduction", "3C Cell Differentiation, Gene Expression and Stem cells", "4A Plant structure, function and antimicrobial effect", "4B Classification of organisms", "4C Biodiversity and conservation"] },
+                    { unit: "Unit 3", topics: ["U3 Core Practicals"] },
+                    { unit: "Unit 4", topics: ["5A Photosynthesis and chromatography", "5B Ecology, Speciation and Succession", "5C Energy Transfer, Climate Change and Global Warming", "6A Bacteria, Viruses and Microbial Techniques", "6B Immune Response, antibiotics and resistance", "6C Decomposition, DNA profiling and forensics"] }
+                ],
+                "Physics": [ /* Add Physics topics here */],
+                "Chemistry": [ /* Add Chemistry topics here */]
+            },
+            "IELTS": {
+                "Speaking": [ /* Add IELTS Speaking topics here */],
+                "Listening": [ /* Add IELTS Listening topics here */],
+                "Reading": [ /* Add IELTS Reading topics here */],
+                "Writing": [ /* Add IELTS Writing topics here */]
+            }
+        };
+
+        function updateTopicSelect() {
+            const selectedUnit = unitSelect.value;
+            const selectedExamBoard = unitSelect.selectedOptions[0].parentElement.label; // Get the optgroup label
+
+            topicSelect.innerHTML = ''; // Clear existing options
+
+            if (selectedUnit && selectedExamBoard && topics[selectedExamBoard] && topics[selectedExamBoard][selectedUnit]) {
+                const unitTopics = topics[selectedExamBoard][selectedUnit];
+                unitTopics.forEach(unitData => {
+
+                    unitData.topics.forEach(topic => {
+                        const option = document.createElement('option');
+                        option.value = topic;
+                        option.text = topic;
+                        topicSelect.appendChild(option);
+                    });
+                });
+            }
+        }
+
+        unitSelect.addEventListener('change', updateTopicSelect);
+
+        updateTopicSelect();
+    </script>
+    <script src="llm.js"></script>
+    <script src="exambank.js"></script>
+
+    <script>
+        const startButton = document.getElementById("start-button");
+        const controls = document.getElementById("left-info");
+        const actionPane = document.getElementById("left-action");
+
+        const mainContent0 = document.getElementById("main-content-0");
+        const mainContent1 = document.getElementById("main-content-1");
+        const mainContent2 = document.getElementById("main-content-2");
+
+
+        let questions = [
+            // {
+            //     question: "How is the structure of glucose related to its function? (3)",
+            //     model_answer: ["It is soluble for easy transport in blood", "Glucose has many bonds for energy release", "Small size allows it to diffuse easily"],
+            // },
+            // {
+            //     question: "Explain the process of osmosis in cells. (5)",
+            //     model_answer: ["Water moves from high to low water potential", "Uses a partially permeable membrane", "Passive process, no energy needed"],
+            // },
+            // {
+            //     question: "Describe the role of enzymes in digestion. (4)",
+            //     model_answer: ["Speed up reactions", "Lower activation energy", "Specific to substrates", "Break down macromolecules"],
+            // }
+        ];
+
+
+
+        let userAnswers = [];
+        let currentQuestion = 0;
+        let timerInterval; // Variable to store the timer interval ID
+
+
+        startButton.addEventListener("click", () => {
+
+
+            const selectedOption = topicSelect.options[topicSelect.selectedIndex].value; // Get selected option value
+            const firstTwoCharacters = selectedOption.substring(0, 2); // Extract first two characters
+            const topics = [firstTwoCharacters]; // Specify topics to filter
+
+            questions = extractQuestions(topics, selectednumberofquestions);
+            console.log(questions);
+            userAnswers = Array(questions.length).fill("");
+
+            controls.innerHTML = `
+        <div class="question-list">
+            ${questions.map((_, index) => `<button class="question-button" data-index="${index}">${index + 1}</button>`).join("")}
+        </div>
+    `;
+            actionPane.innerHTML = `
+        <button class="end-button" id="end-button">End</button>
+    `;
+
+            createQuestionBoxes();
+            showQuestion(0);
+
+            const firstButton = document.querySelector(".question-button");
+            if (firstButton) {
+                selectButton(firstButton);
+            }
+
+            mainContent0.style.display = 'none';
+            mainContent1.style.display = 'flex';
+
+            document.querySelectorAll(".question-button").forEach(button => {
+                button.addEventListener("click", (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    showQuestion(index);
+                    selectButton(button); // Use helper function to select the button
+                });
+            });
+
+            document.getElementById("end-button").addEventListener("click", showResults);
+            startTimer(selectedduration); // 60 seconds = 1 minute
+        });
+
+
+        function createQuestionBoxes() {
+            const questionContainer = document.createElement('div');
+            questionContainer.id = 'question-container';
+
+
+            for (let i = 0; i < questions.length; i++) {
+                const questionBox = document.createElement('div');
+                questionBox.classList.add('question-box');
+                questionBox.id = `question-box-${i}`;
+                questionBox.style.display = 'none'; // Initially hide all question boxes
+                questionBox.innerHTML = `
+                <h1 style="margin-bottom: 10px">Question ${i + 1}</h1>
+                <h3 style="margin-bottom: 20px; font-size: 16px">${questions[i].question}</h3>
+                <textarea id="user-answer-${i}" placeholder="Type your answer here..." oninput="saveUserAnswer(${i}, this.value)"></textarea>
+            `;
+                questionContainer.appendChild(questionBox);
+            }
+            mainContent1.insertBefore(questionContainer, mainContent1.firstChild);
+        }
+        function saveUserAnswer(index, value) {
+            userAnswers[index] = value;
+        }
+
+        function showQuestion(index) {
+            const questionContainer = document.getElementById('question-container');
+            const questionBoxes = questionContainer.querySelectorAll('.question-box');
+
+            questionBoxes.forEach((box, i) => {
+                box.style.display = i === index ? 'block' : 'none';
+            });
+            currentQuestion = index;
+        }
+
+
+        const nextButton = document.getElementById("next-button");
+        nextButton.addEventListener("click", () => {
+            if (currentQuestion < questions.length - 1) {
+                currentQuestion++;
+                showQuestion(currentQuestion);
+                selectButton(document.querySelector(`.question-button[data-index="${currentQuestion}"]`));
+            }
+        });
+
+        const previousButton = document.getElementById("previous-button");
+        previousButton.addEventListener("click", () => {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                showQuestion(currentQuestion);
+                selectButton(document.querySelector(`.question-button[data-index="${currentQuestion}"]`));
+            }
+        });
+
+        function selectButton(button) {
+            const previouslySelected = document.querySelector('.question-button.selected');
+            if (previouslySelected) {
+                previouslySelected.classList.remove('selected');
+            }
+            button.classList.add('selected');
+        }
+
+        async function showResults() {
+            mainContent1.style.display = "none";
+            mainContent2.style.display = "flex";
+
+            const resultsContainer = document.getElementById("results-container");
+            resultsContainer.innerHTML = `
+                    <h1>Loading...</h1>
+                    `;
+
+            // Prepare the input for grading
+            const gradingInput = questions.map((q, i) => ({
+                question: q.question,
+                user_answer: userAnswers[i],
+                model_answer: q.model_answer,
+            }));
+            // console.log(gradingSelect[gradingSelect.selectedIndex].value);
+            if (gradingSelect[gradingSelect.selectedIndex].value == "AI") {
+               
+                
+                try {
+                    // let gradingResult = [];
+                    
+                    // let gradingResult = [[1, 1, 1], [0, 1, 0], [0, 1, 0, 1], [0, 1, 0, 1],[0, 1, 1,1]]
+                    // Use llm.js function to process the grading.  This is a placeholder.  Replace with your actual LLM integration.
+                    let gradingResult = await processGrading(gradingInput);
+
+                    // Check if gradingResult is valid
+                    if (!Array.isArray(gradingResult) || gradingResult.length !== questions.length) {
+                        throw new Error("Invalid grading result format or mismatched length.");
+                    }
+                    resultsContainer.innerHTML = "";
+                    // Parse and display the results
+                    gradingResult.forEach((binaryArray, i) => {
+                        if (!Array.isArray(binaryArray)) {
+                            console.error(`Invalid binary array for question ${i + 1}:`, binaryArray);
+                            return;
+                        }
+
+                        const userAnswer = userAnswers[i];
+                        const questionScore = binaryArray.reduce((sum, val) => sum + val, 0); // Calculate individual question score
+                        const isCorrect = binaryArray.every((val) => val > 0.5);
+
+                        // Format model answer with highlighting
+                        const formattedModelAnswer = questions[i].model_answer.map((point, index) => (
+                            `<span style="color: ${binaryArray[index] > 0.5 ? '#0FBD8C' : '#df434e'};">${point}</span><br>`
+                        )).join('');
+
+
+                        const resultItem = document.createElement("div");
+                        resultItem.classList.add("result-item");
+                        resultItem.innerHTML = `
+                    <div class="container" style="margin-bottom: 10px; width: 100%; display: flex; justify-content: space-between">
+                             <h2>Question ${i + 1}</h2>
+                           <h2 style="color: ${isCorrect ? "#0FBD8C" : "#df434e"}">${questionScore} / ${binaryArray.length}</h2>
+                           </div>
+           
+                <h3 style="margin-bottom: 15px; font-size: 16px">${questions[i].question}</h3>
+              
+                <div class="quote">
+                    <p style="white-space: pre-wrap;">${userAnswer}</p>
+                </div>
+                <h3>Model Answer</h3>
+                <div class="quote">
+                    ${formattedModelAnswer}
+                </div>
+
+             
+            `;
+                        resultsContainer.appendChild(resultItem);
+
+                        const questionButton = document.querySelector(`.question-button[data-index="${i}"]`);
+                        if (questionButton) {
+                            questionButton.classList.add(isCorrect ? "correct" : "incorrect");
+                        }
+                    });
+                }
+                catch (error) {
+                    // console.error("Error during grading:", error);
+                    // resultsContainer.innerHTML = `<p style="color: red">An error occurred while grading. Please try again later.</p>`;
+
+
+
+
+
+
+                    resultsContainer.innerHTML = "";
+
+                    questions.forEach((binaryArray, i) => {
+
+                        const userAnswer = userAnswers[i];
+
+                        // Format model answer with highlighting
+                        const formattedModelAnswer = questions[i].model_answer.map((point, index) => (
+                            `<span>${point}</span><br>`
+                        )).join('');
+
+
+                        const resultItem = document.createElement("div");
+                        resultItem.classList.add("result-item");
+                        resultItem.innerHTML = `
+                    <div class="container" style="margin-bottom: 10px; width: 100%; display: flex; justify-content: space-between">
+                             <h2>Question ${i + 1}</h2>
+                           </div>
+           
+                <h3 style="margin-bottom: 15px; font-size: 16px">${questions[i].question}</h3>
+              
+                <div class="quote">
+                    <p style="white-space: pre-wrap;">${userAnswer}</p>
+                </div>
+                <h3>Model Answer</h3>
+                <div class="quote">
+                    ${formattedModelAnswer}
+                </div>
+
+             
+            `;
+                        resultsContainer.appendChild(resultItem);
+
+
+                    });
+
+
+
+
+
+                }
+            } 
+            else {
+               
+                resultsContainer.innerHTML = "";
+                questions.forEach((binaryArray, i) => {
+
+                    const userAnswer = userAnswers[i];
+
+                    // Format model answer with highlighting
+                    const formattedModelAnswer = questions[i].model_answer.map((point, index) => (
+                        `<span>${point}</span><br>`
+                    )).join('');
+
+
+                    const resultItem = document.createElement("div");
+                    resultItem.classList.add("result-item");
+                    resultItem.innerHTML = `
+<div class="container" style="margin-bottom: 10px; width: 100%; display: flex; justify-content: space-between">
+         <h2>Question ${i + 1}</h2>
+       </div>
+
+<h3 style="margin-bottom: 15px; font-size: 16px">${questions[i].question}</h3>
+
+<div class="quote">
+<p style="white-space: pre-wrap;">${userAnswer}</p>
+</div>
+<h3>Model Answer</h3>
+<div class="quote">
+${formattedModelAnswer}
+</div>
+
+
+`;
+                    resultsContainer.appendChild(resultItem);
+
+
+                });
+
+
+            }
+
+        }
+
+
+
+        function startTimer(seconds) {
+            let timeLeft = seconds;
+            const timerElement = document.getElementById("timer");
+
+            // Display the initial timer value immediately
+            const minutes = Math.floor(timeLeft / 60);
+            const remainingSeconds = timeLeft % 60;
+            timerElement.textContent = `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+
+            // Start the interval to update the timer every second
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                const minutes = Math.floor(timeLeft / 60);
+                const remainingSeconds = timeLeft % 60;
+                timerElement.textContent = `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+
+                if (timeLeft < 0) {
+                    clearInterval(timerInterval);
+                  
+                    showResults();
+                }
+            }, 1000);
+        }
+
+    </script>
+    <script src="header.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,894 @@
+<head>
+    <meta charset="UTF-8">
+    <title>Note Scanner - Edexcel IAL Revision</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #ff3b30;
+            --secondary-color: #ff3b30;
+            --light-bg: #F2F2F7;
+            --dark-bg: #000000;
+            --light-text: #333333;
+            --dark-text: #F5F5F7;
+            --light-panel: #FFFFFF;
+            --dark-panel: #1C1C1E;
+            --light-card: #FFFFFF;
+            --dark-card: #2C2C2E;
+            --apple-blue: #0A84FF;
+            --apple-green: #30D158;
+            --apple-red: #FF453A;
+            --apple-purple: #BF5AF2;
+        }
+
+        .dark {
+            color-scheme: dark;
+        }
+
+       
+
+        .panel {
+            background-color: var(--light-panel);
+            border-radius: 1.5rem;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .dark .panel {
+            background-color: var(--dark-panel);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .card {
+            background-color: var(--light-card);
+            border-radius: 1rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+
+        .dark .card {
+            background-color: var(--dark-card);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            background-color: var(--apple-blue);
+            color: white;
+            transition: all 0.2s ease;
+            border-radius: 12px;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px #ff3b304d;
+        }
+
+        .loading-spinner {
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            width: 9px;
+            height: 9px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+
+        .dark .loading-spinner {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid var(--apple-blue);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .camera-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 3/4;
+            background-color: #000000;
+            border-radius: 1.2rem;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        #video, #capture-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #capture-image {
+            display: none;
+        }
+
+        #scan-button {
+            font-size: 1.1rem;
+            font-weight: 500;
+            padding: 1rem 2.5rem;
+            border-radius: 9999px;
+            background-color: #ff3b30;
+            /* background: linear-gradient(135deg, var(--apple-blue), var(--apple-purple)); */
+            box-shadow: 0 8px 20px #ff3b304d;
+            transform-origin: center;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            will-change: transform;
+            position: relative;
+            overflow: hidden;
+            border: none;
+        }
+
+        #scan-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px #ff3b3066;
+        }
+
+        #scan-button:active {
+            transform: scale(0.98);
+        }
+
+        #scan-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: all 0.6s;
+        }
+
+        #scan-button:hover::before {
+            left: 100%;
+        }
+
+        /* Custom markdown styles */
+        .markdown-content {
+            padding: 0.5rem;
+            line-height: 1.4;
+        }
+
+        .markdown-content h1, 
+        .markdown-content h2, 
+        .markdown-content h3, 
+        .markdown-content h4, 
+        .markdown-content h5, 
+        .markdown-content h6 {
+            margin-top: 0.5rem;
+            margin-bottom: 0.25rem;
+            font-weight: 600;
+        }
+
+        .markdown-content h1 { font-size: 1.2rem; }
+        .markdown-content h2 { font-size: 1.1rem; }
+        .markdown-content h3 { font-size: 1rem; }
+        
+        .markdown-content ul, 
+        .markdown-content ol {
+            padding-left: 1rem;
+            margin: 0.3rem 0;
+        }
+
+        .markdown-content ul { list-style-type: disc; }
+        .markdown-content ol { list-style-type: decimal; }
+
+        .markdown-content p {
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-content code {
+            background-color: rgba(93, 92, 222, 0.1);
+            padding: 0.1rem 0.3rem;
+            border-radius: 0.25rem;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+
+        .markdown-content pre {
+            background-color: rgba(93, 92, 222, 0.1);
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            overflow-x: auto;
+            margin: 0.5rem 0;
+        }
+
+        .dark .markdown-content code,
+        .dark .markdown-content pre {
+            background-color: rgba(93, 92, 222, 0.2);
+        }
+
+        .btn-pill {
+            border-radius: 9999px;
+            padding: 0.35rem 0.75rem;
+            font-size: 0.75rem;
+            transition: all 0.2s ease;
+            border: none;
+            background-color: var(--light-bg);
+        }
+
+        .dark .btn-pill {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-pill:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-blue {
+            background-color: var(--apple-blue);
+            color: white;
+        }
+
+        .btn-green {
+            background-color: var(--apple-green);
+            color: white;
+        }
+
+        .btn-neutral {
+            background-color: #E5E5EA;
+            color: #3A3A3C;
+        }
+
+        .dark .btn-neutral {
+            background-color: #3A3A3C;
+            color: #E5E5EA;
+        }
+
+        /* Status message animation */
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        #status-message {
+            animation: slideIn 0.3s ease forwards;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #ff3b304d;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-color);
+        }
+
+        .dark ::-webkit-scrollbar-thumb {
+            background: rgba(93, 92, 222, 0.5);
+        }
+    </style>
+</head>
+<body class="p-3 md:p-6">
+    <header class="mb-4">
+ 
+    </header>
+
+  <main class="flex flex-col md:flex-row gap-4 h-100">
+    <!-- Left Panel - Camera -->
+    <section class="w-full md:w-1/3 panel p-4 flex flex-col" style="height: 650px">
+        <h4 class="text-lg font-semibold mb-3"><i class="fas fa-camera mr-2"></i>Camera</h4>
+        
+        <div class="camera-container mb-4 flex-grow">
+            <video id="video" autoplay playsinline></video>
+            <img id="capture-image" alt="Captured Note">
+        </div>
+
+        <div class="flex justify-center items-center">
+            <button id="scan-button" class="flex items-center justify-center" style="color: white">
+                <i class="fas fa-magic mr-2"></i>
+                <span>Scan Notes</span>
+            </button>
+        </div>
+    </section>
+
+    <!-- Right Panel - Converted Notes -->
+    <section class="w-full md:w-2/3 panel p-4 h-full md:h-full flex flex-col" style="height: 650px">
+        <h4 class="text-lg font-semibold mb-3"><i class="fas fa-file-alt mr-2"></i>Converted Notes</h4>
+        
+        <div id="results-container" class="space-y-3 overflow-y-auto flex-grow pr-1">
+            <div class="text-center text-gray-500 dark:text-gray-400 py-10">
+                <i class="fas fa-arrow-left text-2xl mb-3"></i>
+                <p class="text-sm">Scan your notes to see the converted text here</p>
+            </div>
+        </div>
+    </section>
+</main>
+
+    <div id="status-message" class="fixed bottom-5 right-5 hidden p-3 rounded-xl shadow-lg text-sm"></div>
+
+    <script>
+        // Check for dark mode preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // DOM Elements
+        const video = document.getElementById('video');
+        const captureImage = document.getElementById('capture-image');
+        const scanButton = document.getElementById('scan-button');
+        const resultsContainer = document.getElementById('results-container');
+        const statusMessage = document.getElementById('status-message');
+
+        // Variables
+        let stream = null;
+        let cameraActive = false;
+        let scanCount = 0;
+
+        // Initialize camera automatically on page load
+        document.addEventListener('DOMContentLoaded', startCamera);
+
+        async function startCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                });
+                video.srcObject = stream;
+                cameraActive = true;
+                scanButton.disabled = false;
+                scanButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                showStatusMessage('Camera started successfully', 'success');
+            } catch (err) {
+                console.error('Error accessing camera:', err);
+                showStatusMessage('Failed to access camera: ' + err.message, 'error');
+                
+                // Add a retry button in case camera fails to start
+                const cameraContainer = document.querySelector('.camera-container');
+                cameraContainer.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-full">
+                        <i class="fas fa-video-slash text-3xl mb-3 text-red-500"></i>
+                        <p class="text-center mb-4">Camera access failed: ${err.message}</p>
+                        <button id="retry-camera" class="btn-primary px-4 py-2 rounded-full">
+                            <i class="fas fa-sync-alt mr-2"></i>Retry
+                        </button>
+                    </div>
+                `;
+                document.getElementById('retry-camera').addEventListener('click', startCamera);
+            }
+        }
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+                cameraActive = false;
+            }
+        }
+
+        // Scan button
+        scanButton.addEventListener('click', captureAndProcess);
+
+        async function captureAndProcess() {
+            if (!cameraActive) {
+                showStatusMessage('Camera is not active. Please refresh the page.', 'error');
+                return;
+            }
+
+            try {
+                // Add ripple effect to scan button when clicked
+                const ripple = document.createElement('span');
+                ripple.style.position = 'absolute';
+                ripple.style.borderRadius = '50%';
+                ripple.style.backgroundColor = 'rgba(255, 255, 255, 0.4)';
+                ripple.style.transform = 'scale(0)';
+                ripple.style.animation = 'ripple 0.6s linear';
+                ripple.style.pointerEvents = 'none';
+                
+                scanButton.appendChild(ripple);
+                
+                // Define ripple animation
+                const style = document.createElement('style');
+                style.textContent = `
+                @keyframes ripple {
+                    to {
+                        transform: scale(2.5);
+                        opacity: 0;
+                    }
+                }`;
+                document.head.appendChild(style);
+                
+                setTimeout(() => {
+                    ripple.remove();
+                    style.remove();
+                }, 600);
+
+                // Disable scan button during processing
+                scanButton.disabled = true;
+                scanButton.classList.add('opacity-50');
+                
+                // Create a canvas to capture the image
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                
+                // Draw video frame to canvas
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                // Display the captured image
+                captureImage.src = canvas.toDataURL('image/jpeg');
+                captureImage.style.display = 'block';
+                video.style.display = 'none';
+                
+                // Convert canvas to blob
+                const blob = await new Promise(resolve => {
+                    canvas.toBlob(resolve, 'image/jpeg', 0.8);
+                });
+                
+                // Create unique ID for this scan
+                scanCount++;
+                const scanId = `scan-${scanCount}`;
+                
+                // Add a new subsection to the results container
+                const subsection = createSubsection(scanId);
+                
+                // If this is the first scan, clear the initial message
+                if (scanCount === 1) {
+                    resultsContainer.innerHTML = '';
+                }
+                
+                // Add the subsection to the results container
+                resultsContainer.prepend(subsection);
+                
+                // Process the image with OCR
+                await processImageWithOCR(blob, scanId);
+                
+                // Re-enable scan button
+                scanButton.disabled = false;
+                scanButton.classList.remove('opacity-50');
+                
+                // Switch back to video display for next scan
+                captureImage.style.display = 'none';
+                video.style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error processing image:', error);
+                showStatusMessage('Error processing image: ' + error.message, 'error');
+                
+                // Re-enable scan button
+                scanButton.disabled = false;
+                scanButton.classList.remove('opacity-50');
+                
+                // Switch back to video display
+                captureImage.style.display = 'none';
+                video.style.display = 'block';
+            }
+        }
+
+        function createSubsection(id) {
+            const subsection = document.createElement('div');
+            subsection.id = id;
+            subsection.className = 'card p-3 space-y-2 rounded-xl shadow-sm backdrop-blur-sm bg-white/90 dark:bg-black/40';
+            
+            // Add timestamp
+            const timestamp = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const date = new Date().toLocaleDateString([], {month: 'short', day: 'numeric'});
+            
+            subsection.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <h3 class="font-medium text-sm">Scan #${scanCount}</h3>
+                    <span class="text-xs text-gray-500 dark:text-gray-400">${date}, ${timestamp}</span>
+                </div>
+                <div class="flex items-center space-x-2 py-2">
+                    <div class="loading-spinner" style="width: 20px; height: 20px"></div>
+                    <h3 class="text-sm">Processing your notes...</h3>
+                </div>
+                <div class="content-area hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div class="raw-text-section">
+                            <h4 class="font-medium text-xs mb-1 text-gray-600 dark:text-gray-300 hidden">Raw Text</h4>
+                            <div class="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg overflow-auto h-40 text-xs">
+                                <pre id="${id}-raw-text" class="whitespace-pre-wrap"></pre>
+                            </div>
+                            <div class="flex flex-wrap gap-1 mt-2">
+                                <button class="copy-btn btn-pill btn-neutral">
+                                    <i class="far fa-copy mr-1"></i>Copy
+                                </button>
+                                <button class="convert-btn btn-pill btn-blue">
+                                    <i class="fas fa-magic mr-1"></i>Convert
+                                </button>
+                            </div>
+                        </div>
+                        <div class="markdown-section hidden">
+                            <h4 class="font-medium text-xs mb-1 text-gray-600 dark:text-gray-300 hidden">Processed Notes</h4>
+                            <div class="markdown-content bg-gray-100 dark:bg-gray-800 p-2 rounded-lg overflow-auto h-40 text-xs"></div>
+                            <div class="flex flex-wrap gap-1 mt-2">
+                                <button class="copy-markdown-btn btn-pill btn-neutral">
+                                    <i class="far fa-copy mr-1"></i>Copy
+                                </button>
+                                <button class="toggle-view-btn btn-pill btn-neutral">
+                                    <i class="fas fa-code mr-1"></i>Toggle
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            return subsection;
+        }
+
+        async function processImageWithOCR(imageBlob, scanId) {
+            try {
+                // Convert blob to base64
+                const base64Image = await blobToBase64(imageBlob);
+                
+                // Update the subsection to prepare for streaming
+                const subsection = document.getElementById(scanId);
+                const loadingElement = subsection.querySelector('.loading-spinner').parentElement;
+                const contentArea = subsection.querySelector('.content-area');
+                const rawTextElement = subsection.querySelector(`#${scanId}-raw-text`);
+                
+                // Show content area but keep loading indicator visible during streaming
+                loadingElement.classList.remove('hidden');
+                contentArea.classList.remove('hidden');
+                
+                // Prepare the API request with streaming enabled
+                const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": "Bearer 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",
+                        "HTTP-Referer": "note-to-text-converter.app",
+                        "X-Title": "Note Scanner",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        "model": "google/gemma-3-4b-it:free",
+                        "messages": [
+                            {
+                                "role": "user",
+                                "content": [
+                                    {
+                                        "type": "text",
+                                        "text": "You are a text OCR extracting agent. Extract all the text from this image. Just give the pure 100% extracted text from the image only, don't add or generate extra text or responses. Do not shorten the text, extract ALL the text. Here is the image:"
+                                    },
+                                    {
+                                        "type": "image_url",
+                                        "image_url": {
+                                            "url": base64Image
+                                        }
+                                    }
+                                ]
+                            }
+                        ],
+                        "stream": true
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status}`);
+                }
+                
+                const reader = response.body?.getReader();
+                if (!reader) {
+                    throw new Error('Response body is not readable');
+                }
+                
+                const decoder = new TextDecoder();
+                let buffer = '';
+                let rawText = '';
+                
+                try {
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        
+                        // Append new chunk to buffer
+                        buffer += decoder.decode(value, { stream: true });
+                        
+                        // Process complete lines from buffer
+                        while (true) {
+                            const lineEnd = buffer.indexOf('\n');
+                            if (lineEnd === -1) break;
+                            
+                            const line = buffer.slice(0, lineEnd).trim();
+                            buffer = buffer.slice(lineEnd + 1);
+                            
+                            if (line.startsWith('data: ')) {
+                                const data = line.slice(6);
+                                if (data === '[DONE]') break;
+                                
+                                try {
+                                    const parsed = JSON.parse(data);
+                                    const content = parsed.choices[0].delta.content;
+                                    if (content) {
+                                        rawText += content;
+                                        rawTextElement.textContent = rawText;
+                                    }
+                                } catch (e) {
+                                    // Ignore invalid JSON
+                                }
+                            }
+                        }
+                    }
+                } finally {
+                    reader.cancel();
+                    
+                    // Hide loading indicator when streaming is complete
+                    loadingElement.classList.add('hidden');
+                    
+                    // Add event listeners for the buttons
+                    const copyBtn = subsection.querySelector('.copy-btn');
+                    const convertBtn = subsection.querySelector('.convert-btn');
+                    
+                    copyBtn.addEventListener('click', () => {
+                        copyToClipboard(rawText);
+                        showStatusMessage('Raw text copied to clipboard', 'success');
+                    });
+                    
+                    convertBtn.addEventListener('click', async () => {
+                        await convertToMarkdown(rawText, scanId);
+                    });
+                    
+                    showStatusMessage('Notes processed successfully', 'success');
+                }
+                
+            } catch (error) {
+                console.error('API Error:', error);
+                
+                // Update the subsection to show the error
+                const subsection = document.getElementById(scanId);
+                const loadingElement = subsection.querySelector('.loading-spinner').parentElement;
+                
+                loadingElement.innerHTML = `
+                    <i class="fas fa-exclamation-circle text-red-500 text-xl mr-2"></i>
+                    <p class="text-sm">Error: ${error.message}</p>
+                    <button class="retry-btn btn-pill btn-blue ml-2">Retry</button>
+                `;
+                
+                // Add retry button functionality
+                const retryBtn = loadingElement.querySelector('.retry-btn');
+                retryBtn.addEventListener('click', async () => {
+                    loadingElement.innerHTML = `
+                        <div class="loading-spinner"></div>
+                        <p class="text-sm" style="margin-bottom: 0px">Processing your notes...</p>
+                    `;
+                    
+                    // Create a new canvas and recapture the image from the video
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    
+                    const newBlob = await new Promise(resolve => {
+                        canvas.toBlob(resolve, 'image/jpeg', 0.8);
+                    });
+                    
+                    // Process the new image
+                    await processImageWithOCR(newBlob, scanId);
+                });
+                
+                showStatusMessage('Failed to process notes: ' + error.message, 'error');
+            }
+        }
+
+        async function convertToMarkdown(text, scanId) {
+            try {
+                // Get elements
+                const subsection = document.getElementById(scanId);
+                const convertBtn = subsection.querySelector('.convert-btn');
+                const markdownSection = subsection.querySelector('.markdown-section');
+                
+                // Show loading state
+                const originalBtnText = convertBtn.innerHTML;
+                convertBtn.innerHTML = '<div class="loading-spinner mr-1"></div>Converting...';
+                convertBtn.disabled = true;
+                
+                // Show markdown section with loading state
+                markdownSection.classList.remove('hidden');
+                const markdownContent = markdownSection.querySelector('.markdown-content');
+                markdownContent.innerHTML = '<div class="flex justify-center items-center h-full"><div class="loading-spinner mr-2"></div>Generating markdown...</div>';
+                
+                // Make API request to convert to markdown with streaming
+                const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": "Bearer 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",
+                        "HTTP-Referer": "note-to-text-converter.app",
+                        "X-Title": "Note Scanner",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        "model": "qwen/qwen2.5-vl-32b-instruct:free",
+                        "messages": [
+                            {
+                                "role": "user",
+                                "content": [
+                                    {
+                                        "type": "text",
+                                        "text": `Convert the following revision notes into well-formatted markdown. 
+                                        Only use the text below, do not add any extra responses. Start directly with #, no need the code syntax.
+                                        Here is the text: 
+                                        ${text}`
+                                    }
+                                ]
+                            }
+                        ],
+                        "stream": true
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status}`);
+                }
+                
+                const reader = response.body?.getReader();
+                if (!reader) {
+                    throw new Error('Response body is not readable');
+                }
+                
+                const decoder = new TextDecoder();
+                let buffer = '';
+                let markdownText = '';
+                
+                try {
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        
+                        // Append new chunk to buffer
+                        buffer += decoder.decode(value, { stream: true });
+                        
+                        // Process complete lines from buffer
+                        while (true) {
+                            const lineEnd = buffer.indexOf('\n');
+                            if (lineEnd === -1) break;
+                            
+                            const line = buffer.slice(0, lineEnd).trim();
+                            buffer = buffer.slice(lineEnd + 1);
+                            
+                            if (line.startsWith('data: ')) {
+                                const data = line.slice(6);
+                                if (data === '[DONE]') break;
+                                
+                                try {
+                                    const parsed = JSON.parse(data);
+                                    const content = parsed.choices[0].delta.content;
+                                    if (content) {
+                                        markdownText += content;
+                                        // Render the markdown in real-time
+                                        markdownContent.innerHTML = marked.parse(markdownText);
+                                    }
+                                } catch (e) {
+                                    // Ignore invalid JSON
+                                }
+                            }
+                        }
+                    }
+                } finally {
+                    reader.cancel();
+                    
+                    // Store the markdown source for copying
+                    markdownSection.dataset.markdown = markdownText;
+                    
+                    // Add event listeners for markdown buttons
+                    const copyMarkdownBtn = markdownSection.querySelector('.copy-markdown-btn');
+                    const toggleViewBtn = markdownSection.querySelector('.toggle-view-btn');
+                    
+                    copyMarkdownBtn.addEventListener('click', () => {
+                        copyToClipboard(markdownText);
+                        showStatusMessage('Markdown copied to clipboard', 'success');
+                    });
+                    
+                    let showingSource = false;
+                    toggleViewBtn.addEventListener('click', () => {
+                        if (showingSource) {
+                            // Switch to rendered view
+                            markdownContent.innerHTML = marked.parse(markdownText);
+                            toggleViewBtn.innerHTML = '<i class="fas fa-code mr-1"></i>Toggle';
+                        } else {
+                            // Switch to source view
+                            markdownContent.innerHTML = `<pre class="text-xs">${markdownText}</pre>`;
+                            toggleViewBtn.innerHTML = '<i class="fas fa-eye mr-1"></i>Toggle';
+                        }
+                        showingSource = !showingSource;
+                    });
+                    
+                    // Reset button state
+                    convertBtn.innerHTML = originalBtnText;
+                    convertBtn.disabled = false;
+                    
+                    showStatusMessage('Converted to markdown', 'success');
+                }
+                
+            } catch (error) {
+                console.error('Markdown Conversion Error:', error);
+                
+                // Reset button state
+                const subsection = document.getElementById(scanId);
+                const convertBtn = subsection.querySelector('.convert-btn');
+                convertBtn.innerHTML = '<i class="fas fa-magic mr-1"></i>Convert';
+                convertBtn.disabled = false;
+                
+                const markdownSection = subsection.querySelector('.markdown-section');
+                if (!markdownSection.classList.contains('hidden')) {
+                    const markdownContent = markdownSection.querySelector('.markdown-content');
+                    markdownContent.innerHTML = `<div class="text-red-500 p-2"><i class="fas fa-exclamation-circle mr-2"></i>Error: ${error.message}</div>`;
+                }
+                
+                showStatusMessage('Failed to convert to markdown: ' + error.message, 'error');
+            }
+        }
+
+        // Helper function to convert blob to base64
+        function blobToBase64(blob) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        }
+
+        // Helper function to copy text to clipboard
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).catch(err => {
+                console.error('Could not copy text: ', err);
+                showStatusMessage('Failed to copy text: ' + err.message, 'error');
+            });
+        }
+
+        // Status message handling
+        function showStatusMessage(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.className = 'fixed bottom-5 right-5 p-3 rounded-xl shadow-lg text-sm flex items-center';
+            
+            let icon = '';
+            if (type === 'error') {
+                statusMessage.classList.add('bg-red-500', 'text-white');
+                icon = '<i class="fas fa-exclamation-circle mr-2"></i>';
+            } else if (type === 'success') {
+                statusMessage.classList.add('bg-green-500', 'text-white');
+                icon = '<i class="fas fa-check-circle mr-2"></i>';
+            } else {
+                statusMessage.classList.add('bg-blue-500', 'text-white');
+                icon = '<i class="fas fa-info-circle mr-2"></i>';
+            }
+            
+            statusMessage.innerHTML = icon + message;
+            statusMessage.classList.remove('hidden');
+            
+            // Hide after 3 seconds
+            setTimeout(() => {
+                statusMessage.classList.add('hidden');
+            }, 3000);
+        }
+
+        // Clean up on page unload
+        window.addEventListener('beforeunload', () => {
+            stopCamera();
+        });
+    </script>
+</body>
