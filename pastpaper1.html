@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Past Papers - Paper Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        /* Tailwind configuration for custom colors and dark mode */
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#FF3B30',
+                        biology: '#0FBD8C',
+                        chemistry: '#FF8585',
+                        physics: '#4081FF',
+                        math: '#FFAB1A',
+                    },
+                },
+            },
+        };
+
+        /* Apply dark mode if preferred by the user's system settings */
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        </script>
+        <style>
+        /* Custom styles for the app */
+        :root {
+            --primary-color: #007aff;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        .paper-card {
+            transition: all 0.2s ease;
+            border: 1px solid #e2e8f0;
+        }
+        /* .paper-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        } */
+        .camera-overlay {
+            background: rgba(0, 0, 0, 0.9);
+        }
+        #video {
+            max-width: 100%;
+            max-height: 70vh;
+            border-radius: 8px;
+        }
+        .search-highlight {
+            background-color: #fef3c7;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        /* Hide scrollbar for specific elements */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none; /* IE and Edge */
+            scrollbar-width: none; /* Firefox */
+        }
+        .unit-button.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .unit-button {
+            border: none;
+        }
+        select {
+            border-radius: 20px;
+        }
+        
+    </style>
+</head>
+<body class="antialiased bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-200">
+    <!-- Main Container -->
+    <div class="w-full h-screen flex flex-col">
+        
+        <!-- Header -->
+        <header class="flex justify-between items-center p-4 bg-white border-b dark:bg-gray-800 dark:border-gray-700 h-[80px]">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-200">Past Papers</h1>
+                <p class="text-xs text-gray-500 mt-1">Search and access past papers</p>
+            </div>
+
+            <script src="header.js"></script>
+
+            <div class="flex items-center space-x-2">
+                <button id="camera-search-btn" class="bg-white p-2 rounded-lg shadow-md hover:bg-gray-100 transition dark:bg-gray-700 dark:hover:bg-gray-600" title="Scan barcode">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-700 dark:text-gray-200">
+                        <path d="M9 12l2 2 4-4"/>
+                        <path d="M21 12c-1 0-3-1-3-3s2-3 3-3 3 1 3 3-2 3-3 3"/>
+                        <path d="M3 12c1 0 3-1 3-3s-2-3-3-3-3 1-3 3 2 3 3 3"/>
+                        <path d="M12 21c0-1-1-3-3-3s-3 2-3 3 1 3 3 3 3-2 3-3"/>
+                        <path d="M12 3c0 1-1 3-3 3s-3-2-3-3 1-3 3-3 3 2 3 3"/>
+                    </svg>
+                </button>
+                <button class="bg-white p-2 rounded-lg shadow-md hover:bg-gray-100 transition dark:bg-gray-700 dark:hover:bg-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-700 dark:text-gray-200">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="flex flex-1 overflow-hidden">
+            
+            <!-- Left Sidebar - Search and Filters -->
+            <div class="w-80 bg-white border-r flex flex-col dark:bg-gray-800 dark:border-gray-700 overflow-auto">
+                <div class="p-4 border-b dark:border-gray-700">
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            id="search-input" 
+                            placeholder="Search papers (e.g., Biology Unit 1 2023)"
+                            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                        >
+                        <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                    <div class="mt-2 text-xs text-gray-500">
+                        Search by subject, paper, year, or series
+                    </div>
+                </div>
+
+                <!-- Subject Selector -->
+                <div class="p-4 border-b dark:border-gray-700">
+                    <label for="subjectSelect" class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">Select Subject</label>
+                    <div class="relative">
+                        <select id="subjectSelect" class="w-full p-2 text-base bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200">
+                            <option value="Biology">Biology</option>
+                            <option value="Physics">Physics</option>
+                            <option value="Chemistry">Chemistry</option>
+                            <option value="Math">Math</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Unit Selector -->
+                <div class="p-4 border-b dark:border-gray-700">
+                    <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">Select Unit</label>
+                    <div class="flex flex-wrap gap-2 unit-buttons bg-gray-100 dark:bg-gray-700 p-2 rounded-lg">
+                        <!-- Units will be inserted here by JS -->
+                    </div>
+                </div>
+
+                <!-- Quick Filters -->
+                <div class="p-4 border-b dark:border-gray-700">
+                    <h3 class="font-semibold text-gray-700 mb-3 dark:text-gray-200">Quick Filters</h3>
+                    <div class="space-y-2">
+                        <button class="filter-btn w-full text-left px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 transition text-sm dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200" data-filter="Physics">Physics</button>
+                        <button class="filter-btn w-full text-left px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 transition text-sm dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200" data-filter="Chemistry">Chemistry</button>
+                        <button class="filter-btn w-full text-left px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 transition text-sm dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200" data-filter="Biology">Biology</button>
+                        <button class="filter-btn w-full text-left px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 transition text-sm dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200" data-filter="Math">Math</button>
+                        <button class="filter-btn w-full text-left px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 transition text-sm dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200" data-filter="2024">2024</button>
+                        <button class="filter-btn w-full text-left px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 transition text-sm dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200" data-filter="2023">2023</button>
+                    </div>
+                </div>
+
+                <!-- Search Results Count -->
+                <div class="p-4">
+                    <div id="results-count" class="text-sm text-gray-600 dark:text-gray-400">
+                        Showing all papers
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Content Area - Papers List -->
+            <div class="flex-1 overflow-auto p-6 bg-gray-50 dark:bg-gray-900 flex justify-center">
+                <div id="papers-container" class="space-y-6 max-w-[1200px] mx-auto">
+                    <!-- Papers will be rendered here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Camera Search Overlay -->
+    <div id="camera-overlay" class="fixed inset-0 camera-overlay z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4 dark:bg-gray-800">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Scan Paper Barcode</h3>
+                <button id="close-camera-btn" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="text-center">
+                <video id="video" class="mb-4 bg-black"></video>
+                <div id="camera-status" class="text-sm text-gray-600 mb-4 dark:text-gray-400">
+                    Starting camera...
+                </div>
+                <div id="barcode-result" class="hidden">
+                    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4 dark:bg-green-800 dark:border-green-700 dark:text-green-200">
+                        <strong>Barcode detected:</strong> <span id="detected-barcode"></span>
+                    </div>
+                    <button id="search-barcode-btn" class="btn-primary w-full">Search for this paper</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const subjectsData = {
+            'Physics': { papers: ['Unit 1', 'Unit 2', 'Unit 3', 'Unit 4', 'Unit 5', 'Unit 6'] },
+            'Chemistry': { papers: ['Unit 1', 'Unit 2', 'Unit 3', 'Unit 4', 'Unit 5', 'Unit 6'] },
+            'Biology': { papers: ['Unit 1', 'Unit 2', 'Unit 3', 'Unit 4', 'Unit 5', 'Unit 6'] },
+            'Math': { papers: ['P1', 'P2', 'P3', 'P4', 'M1', 'M2', 'M3', 'FP1', 'FP2', 'FP3', 'S1', 'S2', 'S3', 'D1', 'D2'] }
+        };
+
+        // Use abbreviated series names internally and for display
+        const series = ['Jan', 'Jun', 'Oct']; 
+        const years = [2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015];
+
+        // Helper function to map abbreviated month to full month
+        function getFullMonthName(abbr) {
+            switch(abbr) {
+                case 'Jan': return 'January';
+                case 'Jun': return 'June';
+                case 'Oct': return 'October';
+                default: return ''; // Fallback
+            }
+        }
+
+        // Generate all possible papers
+        let allPapers = [];
+        Object.entries(subjectsData).forEach(([subject, data]) => {
+            data.papers.forEach(paper => {
+                series.forEach(serie => {
+                    years.forEach(year => {
+                        // Skip October for FP papers
+                        if (serie === 'Oct' && paper.startsWith('FP')) return;
+                        
+                        allPapers.push({
+                            subject,
+                            paper,
+                            series: serie, // Store abbreviated series
+                            year,
+                            id: `${subject}_${paper}_${serie}_${year}`.replace(/\s/g, '_')
+                        });
+                    });
+                });
+            });
+        });
+
+        // Sort papers by year (newest first), then by subject, then by paper
+        allPapers.sort((a, b) => {
+            if (a.year !== b.year) return b.year - a.year;
+            if (a.subject !== b.subject) return a.subject.localeCompare(b.subject);
+            return a.paper.localeCompare(b.paper);
+        });
+
+        // DOM Elements
+        const searchInput = document.getElementById('search-input');
+        const papersContainer = document.getElementById('papers-container');
+        const resultsCount = document.getElementById('results-count');
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const cameraSearchBtn = document.getElementById('camera-search-btn');
+        const cameraOverlay = document.getElementById('camera-overlay');
+        const closeCameraBtn = document.getElementById('close-camera-btn');
+        const video = document.getElementById('video');
+        const cameraStatus = document.getElementById('camera-status');
+        const barcodeResult = document.getElementById('barcode-result');
+        const detectedBarcode = document.getElementById('detected-barcode');
+        const searchBarcodeBtn = document.getElementById('search-barcode-btn');
+        const subjectSelect = document.getElementById('subjectSelect'); // New subject selector element
+        const unitButtonsContainer = document.querySelector('.unit-buttons'); // New unit buttons container
+
+        // Current filtered papers
+        let filteredPapers = [...allPapers];
+
+        // Camera and barcode scanning variables
+        let codeReader = null;
+        let stream = null;
+
+        // --- SEARCH FUNCTIONALITY ---
+        function searchPapers(query) {
+            const lowerCaseQuery = query.toLowerCase().trim();
+            if (!lowerCaseQuery) {
+                filteredPapers = [...allPapers];
+                renderPapers();
+                return;
+            }
+
+            // Try to extract specific components from the query
+            let searchSubject = null;
+            let searchPaper = null; // e.g., "Unit 1", "P1"
+            let searchSeries = null; // Can be full or abbreviated
+            let searchYear = null;
+
+            // Check for year (4 digits) using word boundaries
+            const yearMatch = lowerCaseQuery.match(/\b(20[0-2][0-9])\b/); // Matches years from 2000 to 2029
+            if (yearMatch) {
+                searchYear = parseInt(yearMatch[1]);
+            }
+
+            // Check for subject (case-insensitive and partial match allowed for query)
+            const subjects = Object.keys(subjectsData).map(s => s.toLowerCase());
+            for (const subj of subjects) {
+                if (lowerCaseQuery.includes(subj)) {
+                    searchSubject = subj;
+                    break;
+                }
+            }
+
+            // Check for series (full name or abbreviation)
+            const fullSeriesNames = ['january', 'june', 'october'];
+            const abbrSeriesNames = ['jan', 'jun', 'oct'];
+            for (let i = 0; i < fullSeriesNames.length; i++) {
+                if (lowerCaseQuery.includes(fullSeriesNames[i]) || lowerCaseQuery.includes(abbrSeriesNames[i])) {
+                    searchSeries = abbrSeriesNames[i]; // Store as abbreviation
+                    break;
+                }
+            }
+
+            // Check for paper/unit (e.g., "Unit 1", "P1").
+            let allPaperNames = [];
+            Object.values(subjectsData).forEach(data => {
+                data.papers.forEach(p => allPaperNames.push(p.toLowerCase()));
+            });
+            // Sort by length descending to match "Unit 1" before "Unit" or "1"
+            allPaperNames.sort((a, b) => b.length - a.length);
+
+            for (const pName of allPaperNames) {
+                // Use word boundaries for precise matching of units like "Unit 1" or "P1"
+                const regex = new RegExp(`\\b${pName}\\b`, 'i');
+                if (regex.test(lowerCaseQuery)) {
+                    searchPaper = pName;
+                    break;
+                }
+            }
+
+            filteredPapers = allPapers.filter(paper => {
+                let match = true; 
+
+                // If specific search components were identified, use them for strict matching
+                if (searchSubject && paper.subject.toLowerCase() !== searchSubject) {
+                    match = false;
+                }
+                if (searchPaper && paper.paper.toLowerCase() !== searchPaper) {
+                    match = false;
+                }
+                if (searchSeries && paper.series.toLowerCase() !== searchSeries) {
+                    match = false;
+                }
+                if (searchYear && paper.year !== searchYear) {
+                    match = false;
+                }
+                
+                // If no specific components were identified from the query,
+                // fall back to a general inclusive search across all paper properties.
+                if (!searchSubject && !searchPaper && !searchSeries && !searchYear) {
+                     const paperFullText = `${paper.subject} ${paper.paper} ${paper.series} ${paper.year} ${getFullMonthName(paper.series)}`.toLowerCase(); // Include full month for general search
+                     const queryWords = lowerCaseQuery.split(/\s+/).filter(word => word.length > 0);
+                     match = queryWords.every(word => paperFullText.includes(word));
+                }
+
+                return match;
+            });
+
+            renderPapers();
+        }
+
+        function renderPapers() {
+            papersContainer.innerHTML = '';
+            
+            if (filteredPapers.length === 0) {
+                papersContainer.innerHTML = `
+                    <div class="text-center py-12 text-gray-500 dark:text-gray-400">
+                        <div class="text-lg mb-2">No papers found</div>
+                        <div class="text-sm">Try adjusting your search terms</div>
+                    </div>
+                `;
+                resultsCount.textContent = 'No papers found';
+                return;
+            }
+
+            // Group papers by year
+            const papersByYear = {};
+            filteredPapers.forEach(paper => {
+                if (!papersByYear[paper.year]) {
+                    papersByYear[paper.year] = [];
+                }
+                papersByYear[paper.year].push(paper);
+            });
+
+            Object.entries(papersByYear)
+                .sort(([a], [b]) => b - a) // Sort years descending
+                .forEach(([year, yearPapers]) => {
+                    const yearSection = document.createElement('div');
+                    // Removed mb-2 here to rely solely on space-y-6 on papers-container
+                    yearSection.className = ''; 
+                    
+                    const yearHeader = document.createElement('h3');
+                    yearHeader.className = 'text-xl font-bold text-gray-800 mb-3 border-b pb-1 dark:text-gray-200 dark:border-gray-700';
+                    yearHeader.textContent = year; // Display only year here
+                    yearSection.appendChild(yearHeader);
+
+                    // Group papers by series within year
+                    const papersBySeries = {};
+                    yearPapers.forEach(paper => {
+                        if (!papersBySeries[paper.series]) {
+                            papersBySeries[paper.series] = [];
+                        }
+                        papersBySeries[paper.series].push(paper);
+                    });
+
+                    Object.entries(papersBySeries)
+                        .sort(([a], [b]) => {
+                            const seriesOrder = { 'Jan': 0, 'Jun': 1, 'Oct': 2 };
+                            return seriesOrder[a] - seriesOrder[b];
+                        })
+                        .forEach(([series, seriesPapers]) => {
+                            const seriesSection = document.createElement('div');
+                            seriesSection.className = 'mb-0';
+                            
+                            const papersList = document.createElement('div');
+                            papersList.className = 'space-y-1'; // More compact spacing
+
+                            seriesPapers.forEach(paper => {
+                                const paperCard = createPaperCard(paper);
+                                papersList.appendChild(paperCard);
+                            });
+
+                            seriesSection.appendChild(papersList);
+                            yearSection.appendChild(seriesSection);
+                        });
+                    papersContainer.appendChild(yearSection);
+                });
+
+            // Update results count
+            resultsCount.textContent = `Showing ${filteredPapers.length} paper${filteredPapers.length !== 1 ? 's' : ''}`;
+        }
+
+        function getSubjectColor(subject) {
+            switch(subject) {
+                case 'Biology': return 'biology';
+                case 'Chemistry': return 'chemistry';
+                case 'Physics': return 'physics';
+                case 'Math': return 'math';
+                default: return 'primary';
+            }
+        }
+
+        function createPaperCard(paper) {
+            const card = document.createElement('div');
+            card.className = 'paper-card gap-[80px] bg-white dark:bg-gray-800 rounded-lg p-2 shadow-sm border border-gray-200 dark:border-gray-700 flex justify-between items-center text-sm';
+            
+            const subjectColor = getSubjectColor(paper.subject);
+
+            card.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <span class="font-semibold text-${subjectColor}">${paper.subject}</span>
+                    <span class="text-gray-700 dark:text-gray-300">${paper.paper}</span>
+                    <span class="text-gray-500 dark:text-gray-400">${paper.series} ${paper.year}</span>
+                </div>
+                <div class="flex space-x-2">
+                    <button class="qp-btn flex items-center justify-center px-3 py-1 bg-blue-500 text-white rounded-md text-xs font-medium hover:bg-blue-600 transition" 
+                            data-subject="${paper.subject}" 
+                            data-paper="${paper.paper}" 
+                            data-series="${paper.series}" 
+                            data-year="${paper.year}">
+                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Question
+                    </button>
+                    <button class="ms-btn flex items-center justify-center px-3 py-1 bg-green-500 text-white rounded-md text-xs font-medium hover:bg-green-600 transition"
+                            data-subject="${paper.subject}" 
+                            data-paper="${paper.paper}" 
+                            data-series="${paper.series}" 
+                            data-year="${paper.year}">
+                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Answer
+                    </button>
+                </div>
+                <button class="share-btn text-gray-400 hover:text-gray-600 transition dark:text-gray-500 dark:hover:text-gray-300" data-paper-id="${paper.id}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"/>
+                        </svg>
+                    </button>
+            `;
+            
+            return card;
+        }
+
+        // --- CAMERA FUNCTIONALITY ---
+        function startCamera() {
+            cameraStatus.textContent = 'Starting camera...';
+            barcodeResult.classList.add('hidden');
+            
+            if (!codeReader) {
+                codeReader = new ZXing.BrowserMultiFormatReader();
+            }
+
+            codeReader.getVideoInputDevices()
+                .then((videoInputDevices) => {
+                    if (videoInputDevices.length === 0) {
+                        cameraStatus.textContent = 'No camera found';
+                        return;
+                    }
+
+                    const selectedDeviceId = videoInputDevices[0].deviceId;
+                    cameraStatus.textContent = 'Camera ready - Point at barcode';
+                    
+                    codeReader.decodeFromVideoDevice(selectedDeviceId, video, (result, err) => {
+                        if (result) {
+                            const code = result.text;
+                            // Check if it matches the pattern pxxxxxa (case insensitive)
+                            if (/^p\w+a$/i.test(code)) {
+                                detectedBarcode.textContent = code;
+                                barcodeResult.classList.remove('hidden');
+                                cameraStatus.textContent = 'Barcode detected!';
+                            }
+                        }
+                        if (err && !(err instanceof ZXing.NotFoundException)) {
+                            console.error(err);
+                        }
+                    });
+                })
+                .catch((err) => {
+                    console.error(err);
+                    cameraStatus.textContent = 'Error accessing camera';
+                });
+        }
+
+        function stopCamera() {
+            if (codeReader) {
+                codeReader.reset();
+            }
+            if (video.srcObject) {
+                const tracks = video.srcObject.getTracks();
+                tracks.forEach(track => track.stop());
+                video.srcObject = null;
+            }
+        }
+
+        // --- SUBJECT AND UNIT SELECTION FUNCTIONALITY ---
+        const units = [1, 2, 3, 4, 5, 6];
+        const mathUnits = ['P1', 'P2', 'P3', 'P4', 'M1', 'M2', 'M3', 'FP1', 'FP2', 'FP3', 'S1', 'S2', 'S3', 'D1', 'D2'];
+
+        function createUnitButtons(selectedSubject) {
+            unitButtonsContainer.innerHTML = ''; // Clear previous buttons
+            const currentUnits = selectedSubject === 'Math' ? mathUnits : units;
+
+            currentUnits.forEach(unit => {
+                const button = document.createElement('button');
+                button.textContent = typeof unit === 'number' ? `Unit ${unit}` : unit;
+                button.className = 'unit-button px-0 py-1 w-[30%] grow rounded-md text-sm font-medium bg-gray-200 transition';
+                button.addEventListener('click', () => {
+                    // Update search input and trigger search
+                    searchInput.value = `${selectedSubject} ${button.textContent}`;
+                    searchPapers(searchInput.value);
+
+                    // Deactivate all unit buttons and activate the clicked one
+                    unitButtonsContainer.querySelectorAll('.unit-button').forEach(btn => {
+                        btn.classList.remove('bg-primary', 'text-white', 'dark:bg-primary');
+                        btn.classList.add('bg-gray-200', 'text-gray-700', 'dark:bg-gray-600', 'dark:text-gray-200');
+                    });
+                    button.classList.add('bg-primary', 'text-white', 'dark:bg-primary');
+                    button.classList.remove('bg-gray-200', 'text-gray-700', 'dark:bg-gray-600', 'dark:text-gray-200');
+                });
+                unitButtonsContainer.appendChild(button);
+            });
+            // Automatically click the first unit button to show papers for it
+            if (unitButtonsContainer.firstChild) {
+                unitButtonsContainer.firstChild.click();
+            }
+        }
+
+        // --- EVENT LISTENERS ---
+        searchInput.addEventListener('input', (e) => {
+            searchPapers(e.target.value);
+        });
+
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const filter = btn.dataset.filter;
+                searchInput.value = filter;
+                searchPapers(filter);
+            });
+        });
+
+        subjectSelect.addEventListener('change', (e) => {
+            createUnitButtons(e.target.value);
+        });
+
+        // Paper action buttons
+        papersContainer.addEventListener('click', (e) => {
+            if (e.target.closest('.qp-btn')) {
+                const button = e.target.closest('.qp-btn');
+                const { subject, paper, series, year } = button.dataset;
+                const searchTerm = `Edexcel ${subject} ${paper} ${getFullMonthName(series)} ${year} question paper`;
+                window.open(`https://www.google.com/search?q=${encodeURIComponent(searchTerm)}`, '_blank');
+            } else if (e.target.closest('.ms-btn')) {
+                const button = e.target.closest('.ms-btn');
+                const { subject, paper, series, year } = button.dataset;
+                const searchTerm = `Edexcel ${subject} ${paper} ${getFullMonthName(series)} ${year} mark scheme`;
+                window.open(`https://www.google.com/search?q=${encodeURIComponent(searchTerm)}`, '_blank');
+            } else if (e.target.closest('.share-btn')) {
+                const paperId = e.target.closest('.share-btn').dataset.paperId;
+                const paper = allPapers.find(p => p.id === paperId);
+                if (paper) {
+                    const shareText = `${paper.subject} ${paper.paper} ${getFullMonthName(paper.series)} ${paper.year}`;
+                    if (navigator.share) {
+                        navigator.share({
+                            title: 'Past Paper',
+                            text: shareText,
+                            url: window.location.href // Consider generating a unique URL for the paper if possible
+                        }).catch(error => console.error('Error sharing:', error));
+                    } else {
+                        // Fallback for browsers that don't support Web Share API
+                        // Use a custom modal or message box instead of alert()
+                        navigator.clipboard.writeText(shareText).then(() => {
+                            // Implement a custom modal for "copied to clipboard" message
+                            console.log('Paper details copied to clipboard!');
+                            // Example: display a temporary toast message
+                            const toast = document.createElement('div');
+                            toast.textContent = 'Paper details copied to clipboard!';
+                            toast.className = 'fixed bottom-4 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-md shadow-lg transition-opacity duration-300 opacity-0';
+                            document.body.appendChild(toast);
+                            setTimeout(() => {
+                                toast.style.opacity = '1';
+                            }, 10);
+                            setTimeout(() => {
+                                toast.style.opacity = '0';
+                                toast.addEventListener('transitionend', () => toast.remove());
+                            }, 2000);
+                        }).catch(err => {
+                            console.error('Failed to copy text:', err);
+                        });
+                    }
+                }
+            }
+        });
+
+        // Camera controls
+        cameraSearchBtn.addEventListener('click', () => {
+            cameraOverlay.classList.remove('hidden');
+            startCamera();
+        });
+
+        closeCameraBtn.addEventListener('click', () => {
+            stopCamera();
+            cameraOverlay.classList.add('hidden');
+        });
+
+        searchBarcodeBtn.addEventListener('click', () => {
+            const barcode = detectedBarcode.textContent;
+            stopCamera();
+            cameraOverlay.classList.add('hidden');
+            
+            // Search for the barcode
+            searchInput.value = barcode;
+            searchPapers(barcode);
+        });
+
+        // Close camera overlay when clicking outside
+        cameraOverlay.addEventListener('click', (e) => {
+            if (e.target === cameraOverlay) {
+                stopCamera();
+                cameraOverlay.classList.add('hidden');
+            }
+        });
+
+        // --- INITIALIZATION ---
+        // Set initial subject and create unit buttons for it
+        createUnitButtons(subjectSelect.value);
+        // Initial rendering of papers
+        renderPapers();
+    </script>
+</body>
+</html>
