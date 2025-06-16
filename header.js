@@ -57,7 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
     button.addEventListener("click", () => {
       const targetPage = button.getAttribute("data-page"); // Get the data-page attribute
       if (targetPage) {
-        window.location.href = targetPage; // Redirect to the target page
+        window.location.href = `/learning/${targetPage}`; // Redirect to the target page
       }
     });
   });
