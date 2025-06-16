@@ -5,11 +5,11 @@ document.write(`
 </style>
 <div class="flex-grow flex justify-center items-center" style="z-index: 1000; position: fixed; left: 50%; transform: translate(-50%, 0%);">
   <nav class="bg-[#eeeeee90] p-1 rounded-full flex space-x-1" style="backdrop-filter: blur(20px)">
-    <button class="px-4 py-2 rounded-full text-gray-700 hover:bg-gray-300 transition-colors text-sm" data-page="/ai-teach.html">AI Teach</button>
-    <button class="px-4 py-2 rounded-full text-gray-700 hover:bg-gray-300 transition-colors text-sm" data-page="/notes.html">Notes</button>
-    <button class="px-4 py-2 rounded-full text-gray-700 hover:bg-gray-300 transition-colors text-sm" data-page="/index.html">Home</button>
-    <button class="px-4 py-2 rounded-full text-gray-700 hover:bg-gray-300 transition-colors text-sm" data-page="/pastpaper1.html">Past Paper</button>
-    <button class="px-4 py-2 rounded-full text-gray-700 hover:bg-gray-300 transition-colors text-sm" data-page="/battle.html">Battle</button>
+    <button class="px-4 py-2 rounded-full text-gray-700 hover:bg-gray-300 transition-colors text-sm" data-page="/Learning/ai-teach.html">AI Teach</button>
+    <button class="px-4 py-2 rounded-full text-gray-700 hover:bg-gray-300 transition-colors text-sm" data-page="/Learning/notes.html">Notes</button>
+    <button class="px-4 py-2 rounded-full text-gray-700 hover:bg-gray-300 transition-colors text-sm" data-page="/Learning/index.html">Home</button>
+    <button class="px-4 py-2 rounded-full text-gray-700 hover:bg-gray-300 transition-colors text-sm" data-page="/Learning/pastpaper1.html">Past Paper</button>
+    <button class="px-4 py-2 rounded-full text-gray-700 hover:bg-gray-300 transition-colors text-sm" data-page="/Learning/battle.html">Battle</button>
   </nav>
   <button
     class="bg-gray-200 p-2 absolute top-0 right-[-55px] rounded-full hover:bg-gray-100 transition w-[44px] h-[44px] align-center justify-items-center">
@@ -29,9 +29,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const fullPath = window.location.pathname;
 
   // Extract the relevant part of the path
-  const trimmedPath = fullPath.substring(fullPath.lastIndexOf("/") + 1);
+  const trimmedPath = fullPath.substring(fullPath.indexOf("Learning/") + 9);
 
-  // Map root-level pages to their button text
+  // Map pages under Learning/ to their button text
   const pageToTabMap = {
     "ai-teach.html": "AI Teach",
     "notes.html": "Notes",
